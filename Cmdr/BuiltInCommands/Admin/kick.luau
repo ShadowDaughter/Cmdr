@@ -6,8 +6,14 @@ return {
 	Args = {
 		{
 			Type = "players",
-			Name = "players",
-			Description = "The players to kick.",
+			Name = "Players",
+			Description = "The players to kick",
+		},
+		{
+			Type = "string",
+			Name = "Reason",
+			Description = "Kick message shown to the player",
+			Default = "No reason provided",
 		},
 	},
 }

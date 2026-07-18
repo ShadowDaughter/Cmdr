@@ -1,23 +1,20 @@
-local TextChatService = game:GetService("TextChatService")
 local TextService = game:GetService("TextService")
-local Players = game:GetService("Players")
 
 return function(context, text)
-	local success, filterResult = pcall(function(...)
-		return TextService:FilterStringAsync(text, context.Executor.UserId, Enum.TextFilterContext.PublicChat)
-	end)
-
-	if success then
-		local filteredText = filterResult:GetNonChatStringForBroadcastAsync()
-
-		for _, player in ipairs(Players:GetPlayers()) do
-			if TextChatService:CanUsersChatAsync(context.Executor.UserId, player.UserId) then
-				context:SendEvent(player, "Message", filteredText)
-			end
-		end
-
-		return "Created announcement."
+	if text:match("^%s*$") then
+		return "Announce text cannot be empty."
 	end
 
-	return "Failed to filter announcement!"
+	local filterSuccess, filteredText = pcall(function()
+		local filterResult =
+			TextService:FilterStringAsync(text, context.Executor.UserId, Enum.TextFilterContext.PublicChat)
+		return filterResult:GetNonChatStringForBroadcastAsync()
+	end)
+
+	if not filterSuccess then
+		return `Failed to filter announcement: {filteredText}`
+	end
+
+	context:BroadcastEvent("Message", filteredText)
+	return "Created announcement."
 end
