@@ -35,7 +35,7 @@ You'll need to contact one of our maintainers:
 
 Please approach a maintainer, ideally privately but if not then publicly, and inform them that you need to report a Cmdr security bug. We'll respond with further instructions so you can deliver your report to us.
 
-The [Imaginary Menagerie Discord server](https://discord.gg/xFzPVg5WXm) is a good place to start, and has official channels for Cmdr. You could also try the [Roblox OSS Community](https://discord.gg/Qm3JNyEc32) or other Roblox development related servers.
+The [Cmdr Discord server](https://discord.gg/xFzPVg5WXm) is a good place to start, and has official channels for Cmdr. You could also try the [Roblox OSS Community](https://discord.gg/Qm3JNyEc32) or other Roblox development related servers.
 
 If all else fails and you can't get in touch with any maintainer, please open a GitHub issue stating simply you have a security report and you're struggling to get in touch. We can help from there.
 
