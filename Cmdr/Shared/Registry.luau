@@ -513,7 +513,15 @@ end
 	@deprecated v1.8.0 -- This method was renamed to GetCommandNames in v1.8.0. The old name exists for backwards compatibility and should not be used for new work.
 	@within Registry
 ]=]
-Registry.GetCommandsAsStrings = Registry.GetCommandNames
+function Registry:GetCommandsAsStrings(): { string }
+	Util:_emitDeprecationWarning("GetCommandsAsStrings")
+	return self:GetCommandNames()
+end
+
+Util:_registerDeprecationWarning(
+	"GetCommandsAsStrings",
+	"This method was renamed to GetCommandNames in v1.8.0. The old name exists for backwards compatibility and should not be used for new work."
+)
 
 --[=[
 	Returns an array of containing the names of all registered types, not including aliases.
@@ -576,7 +584,15 @@ end
 	@param priority number -- If unspecified, the priority will default to `0`.
 	@within Registry
 ]=]
-Registry.AddHook = Registry.RegisterHook
+function Registry:AddHook(...)
+	Util:_emitDeprecationWarning("AddHook")
+	self:RegisterHook(...)
+end
+
+Util:_registerDeprecationWarning(
+	"AddHook",
+	"This method was renamed to RegisterHook in v1.1.2. The old name exists for backwards compatibility and should not be used for new work."
+)
 
 --[=[
 	Returns a table saved with the given name. Always returns the same table on subsequent calls. Useful for commands that require persistent state, like bind or ban.
