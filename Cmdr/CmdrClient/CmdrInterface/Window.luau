@@ -156,9 +156,9 @@ function Window:HideInvalidState()
 end
 
 -- Event handler for text box focus lost
-local HasLostFocus = false -- Bandaid fix for duplicate output on Linux
+local hasLostFocus = false -- Bandaid fix for duplicate output on Linux
 function Window:LoseFocus(submit)
-	if HasLostFocus then
+	if hasLostFocus then
 		return
 	end
 
@@ -172,7 +172,7 @@ function Window:LoseFocus(submit)
 	end
 
 	if submit then
-		HasLostFocus = true
+		hasLostFocus = true
 
 		if self.Valid then
 			--task.wait()
@@ -182,7 +182,7 @@ function Window:LoseFocus(submit)
 			self:AddLine(self._errorText, Color3.fromRGB(255, 153, 153))
 		end
 
-		HasLostFocus = false
+		hasLostFocus = false
 	end
 end
 
