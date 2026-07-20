@@ -38,7 +38,7 @@ Cmdr.Registry:RegisterDefaultCommands() -- Optional: This loads the default set 
 
 The [`Cmdr` object](/api/Cmdr) is the main server singleton. The [Registry](/api/Registry) is used on both the client and server, and it keeps track of all the commands, types and hooks that Cmdr knows about.
 
-Cmdr will automatically create and insert into StarterGui its console interface (called Window). If you'd like to (optionally) customise the look of the Window, we have [a guide on this in our Advanced section](/docs/advanced/customisinginterface).
+Cmdr will automatically create and insert into StarterGui its console interface (called Window). If you'd like to (optionally) customise the look of the Window, we have [a guide on this in our Advanced section](/docs/advanced/customizinginterface).
 
 Cmdr will also insert into `ReplicatedStorage` the [`CmdrClient`](/api/CmdrClient) module. On top of being the client entry point (read on below!), this module also houses stuff for internal use, like replication (any commands, types and hooks the client needs to know about) and networking.
 
