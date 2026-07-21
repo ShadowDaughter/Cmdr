@@ -103,7 +103,7 @@
 - [Aliases can now include type checking and name information in arguments](https://eryn.io/Cmdr/guide/MetaCommands.html#alias) (#56)
 - New default command: "me". Displays the current player's name.
 - Make `bring` and `to` commands built-in aliases for `teleport`. `to` has effectively moved from the `DefaultDebug` group to the `DefaultAdmin` group. (#115)
-- The default activation key is now <kbd>F2</kbd>
+- The default activation key is now `F2`
 
 ## v1.6.0
 
@@ -158,7 +158,7 @@
 
 - Fix an issue where the `filter` argument of `RegisterDefaultCommands` was nonfunctional.
 
-# v1.1.3
+## v1.1.3
 
 - Fix an issue where the arrow keys could be used to open auto complete when the menu is closed (#62)
 - Make AutoExec commands only run on the client (#61)

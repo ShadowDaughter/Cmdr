@@ -26,8 +26,7 @@ Line.Parent = nil
 
 -- Update the text entry label
 function Window:UpdateLabel()
-	Entry.TextLabel.Text =
-		`{Player.Name}{if self.Cmdr.PlaceName and self.Cmdr.PlaceName ~= "" then `@{self.Cmdr.PlaceName}` else ""}$`
+	Entry.TextLabel.Text = `{Player.Name}{if self.Cmdr.PlaceName and self.Cmdr.PlaceName ~= "" then `@{self.Cmdr.PlaceName}` else ""}$`
 end
 
 -- Get the text entry label
@@ -37,9 +36,7 @@ end
 
 -- Recalculate the window height
 function Window:UpdateWindowHeight()
-	local windowHeight = Gui.UIListLayout.AbsoluteContentSize.Y
-		+ Gui.UIPadding.PaddingTop.Offset
-		+ Gui.UIPadding.PaddingBottom.Offset
+	local windowHeight = Gui.UIListLayout.AbsoluteContentSize.Y + Gui.UIPadding.PaddingTop.Offset + Gui.UIPadding.PaddingBottom.Offset
 	Gui.Size = UDim2.new(Gui.Size.X.Scale, Gui.Size.X.Offset, 0, math.clamp(windowHeight, 0, WINDOW_MAX_HEIGHT))
 	Gui.CanvasPosition = Vector2.new(0, windowHeight)
 end
@@ -94,16 +91,9 @@ function Window:SetVisible(visible)
 		end
 	else
 		lastClosedTime = os.clock()
-		TextChatService.ChatWindowConfiguration.Enabled = if self.PreviousChatWindowConfigurationEnabled ~= nil
-			then self.PreviousChatWindowConfigurationEnabled
-			else true
-		TextChatService.ChatInputBarConfiguration.Enabled = if self.PreviousChatInputBarConfigurationEnabled
-				~= nil
-			then self.PreviousChatInputBarConfigurationEnabled
-			else true
-		TextChatService.ChannelTabsConfiguration.Enabled = if self.PreviousChannelTabsConfigurationEnabled ~= nil
-			then self.PreviousChannelTabsConfigurationEnabled
-			else true
+		TextChatService.ChatWindowConfiguration.Enabled = if self.PreviousChatWindowConfigurationEnabled ~= nil then self.PreviousChatWindowConfigurationEnabled else true
+		TextChatService.ChatInputBarConfiguration.Enabled = if self.PreviousChatInputBarConfigurationEnabled ~= nil then self.PreviousChatInputBarConfigurationEnabled else true
+		TextChatService.ChannelTabsConfiguration.Enabled = if self.PreviousChannelTabsConfigurationEnabled ~= nil then self.PreviousChannelTabsConfigurationEnabled else true
 
 		Entry.TextBox:ReleaseFocus()
 		self.AutoComplete:Hide()
@@ -197,10 +187,7 @@ function Window:TraverseHistory(delta)
 	end
 
 	self.HistoryState.Position = math.clamp(self.HistoryState.Position + delta, 1, #history + 1)
-	self:SetEntryText(
-		self.HistoryState.Position == #history + 1 and self.HistoryState.InitialText
-			or history[self.HistoryState.Position]
-	)
+	self:SetEntryText(self.HistoryState.Position == #history + 1 and self.HistoryState.InitialText or history[self.HistoryState.Position])
 end
 
 function Window:ClearHistoryState()
@@ -307,8 +294,7 @@ function Window:BeginInput(input, gameProcessed)
 				local lastArg = self.AutoComplete.Arg
 
 				newText = command.Alias
-				insertSpace = self.AutoComplete.NumArgs ~= #command.ArgumentDefinitions
-					and self.AutoComplete.IsPartial == false
+				insertSpace = self.AutoComplete.NumArgs ~= #command.ArgumentDefinitions and self.AutoComplete.IsPartial == false
 
 				local args = command.Arguments
 				for i = 1, #args do

@@ -1,19 +1,79 @@
-local TextService = game:GetService("TextService")
+const TextService = game:GetService("TextService")
+
+const CMDR_ESCAPE = "___!CMDR_ESCAPE!___"
+const CMDR_QUOTE = "___!CMDR_QUOTE!___"
+const CMDR_SQUOTE = "___!CMDR_SQUOTE!___"
+const CMDR_NEW_LINE = "___!CMDR_NL!___"
+const CMDR_DOLLAR = "___!CMDR_DOLLAR!___"
+
+const START_QUOTE_PATTERN = [=[^(['"])]=]
+const END_QUOTE_PATTERN = [=[(['"])$]=]
+const ESCAPED_QUOTE_PATTERN = [=[(\*)['"]$]=]
+
+const OPERATORS = { "&&", "||", ";" }
+
+-- Converts a hexadecimal string into a UTF-8 character.
+const function hexToChar(value: string): string
+	return utf8.char(tonumber(value, 16) :: number)
+end
+
+-- Converts instances into display names and keeps the original values.
+const function transformInstanceSet(instances: { any }): ({ string }, { any })
+	local names: { string } = {}
+
+	for index = 1, #instances do
+		local object = instances[index]
+		if typeof(object) == "Instance" and object:IsA("Player") then
+			names[index] = if object.DisplayName == object.Name then object.Name else `{object.DisplayName} ({object.Name})`
+		else
+			names[index] = object.Name or tostring(object)
+		end
+	end
+
+	return names, instances
+end
+
+-- Replaces escaped control characters with temporary placeholders.
+const function encodeControlChars(text: string): string
+	return (text:gsub("\\\\", CMDR_ESCAPE):gsub('\\"', CMDR_QUOTE):gsub("\\'", CMDR_SQUOTE):gsub("\\\n", CMDR_NEW_LINE))
+end
+
+-- Restores temporary placeholders back into control characters.
+const function decodeControlChars(text: string): string
+	return (text:gsub(CMDR_ESCAPE, "\\"):gsub(CMDR_QUOTE, '"'):gsub(CMDR_NEW_LINE, "\n"))
+end
+
+-- Replaces escaped command variables with temporary placeholders.
+const function encodeCommandEscape(text: string): string
+	return (text:gsub("\\%$", CMDR_DOLLAR))
+end
+
+-- Restores temporary command variable placeholders.
+const function decodeCommandEscape(text: string): string
+	return (text:gsub(CMDR_DOLLAR, "$"))
+end
+
+-- Wraps a string in quotes while escaping special characters.
+const function quoteString(value: string): string
+	return string.format("%q", value)
+end
 
 --[=[
 	@class Util
-
 	Cmdr utilities module.
 ]=]
 
 --[=[
-	@prop _deprecationWarnings { [string]: { Description: string, Suppressed: boolean, Emitted: boolean } }
-	@within Registry
+	@within Util
 	@readonly
 	@private
+
+	@prop _deprecationWarnings { [string]: { Description: string, Suppressed: boolean, Emitted: boolean } }
+
+	A collection of deprecated methods and their warnings.
 ]=]
 
-local Util = {
+const Util = {
 	_deprecationWarnings = {} :: { [string]: { Description: string, Suppressed: boolean, Emitted: boolean } },
 }
 
@@ -23,8 +83,8 @@ local Util = {
 function Util.MakeDictionary(array: { any }): { [any]: true }
 	local dictionary = {}
 
-	for i = 1, #array do
-		dictionary[array[i]] = true
+	for index = 1, #array do
+		dictionary[array[index]] = true
 	end
 
 	return dictionary
@@ -43,22 +103,6 @@ function Util.DictionaryKeys(dict: { [any]: any }): { any }
 	return keys
 end
 
--- Takes an array of instances and returns (array<names>, array<instances>)
-local function transformInstanceSet(instances)
-	local names = {}
-
-	for i = 1, #instances do
-		local object = instances[i]
-		if typeof(object) == "Instance" and object:IsA("Player") then
-			names[i] = if object.DisplayName == object.Name then object.Name else `{object.DisplayName} ({object.Name})`
-		else
-			names[i] = object.Name or tostring(object)
-		end
-	end
-
-	return names, instances
-end
-
 --[=[
 	Returns a function that is a fuzzy finder for the specified set or container.
 
@@ -67,9 +111,9 @@ end
 
 	Exact matches will be inserted in the front of the resulting array.
 ]=]
-function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?) -> string
-	local names
-	local instances = {}
+function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?) -> any
+	local names: { string }?
+	local instances: { any } = {}
 
 	if typeof(setOrContainer) == "Enum" then
 		setOrContainer = setOrContainer:GetEnumItems()
@@ -78,11 +122,7 @@ function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?)
 	if typeof(setOrContainer) == "Instance" then
 		names, instances = transformInstanceSet(setOrContainer:GetChildren())
 	elseif typeof(setOrContainer) == "table" then
-		if
-			typeof(setOrContainer[1]) == "Instance"
-			or typeof(setOrContainer[1]) == "EnumItem"
-			or (typeof(setOrContainer[1]) == "table" and typeof(setOrContainer[1].Name) == "string")
-		then
+		if typeof(setOrContainer[1]) == "Instance" or typeof(setOrContainer[1]) == "EnumItem" or (typeof(setOrContainer[1]) == "table" and typeof(setOrContainer[1].Name) == "string") then
 			names, instances = transformInstanceSet(setOrContainer)
 		elseif type(setOrContainer[1]) == "string" then
 			names = setOrContainer
@@ -95,13 +135,15 @@ function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?)
 		error("[Cmdr] MakeFuzzyFinder only accepts a table, Enum, or Instance.")
 	end
 
+	assert(names) --< Luau Language Server type fix
+
 	-- Searches the set (checking exact matches first)
 	return function(text: string, returnFirst: boolean?, matchStart: boolean?)
 		local resultsPriority = {}
 		local results = {}
 
-		for i, name in pairs(names) do
-			local value = instances and instances[i] or name
+		for index, name in pairs(names) do
+			local value = instances and instances[index] or name
 
 			-- Continue on checking for non-exact matches...
 			-- Still need to loop through everything, even on returnFirst, because possibility of an exact match.
@@ -132,17 +174,9 @@ function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?)
 			if aPriority ~= bPriority then
 				return aPriority < bPriority
 			else
-				local aStr = if typeof(a) == "string"
-					then a
-					elseif typeof(a) == "Instance" then a.Name
-					elseif typeof(a) == "table" and typeof(a.Name) == "string" then a.Name
-					else ""
+				local aStr = if typeof(a) == "string" then a elseif typeof(a) == "Instance" then a.Name elseif typeof(a) == "table" and typeof(a.Name) == "string" then a.Name else ""
 
-				local bStr = if typeof(b) == "string"
-					then b
-					elseif typeof(b) == "Instance" then b.Name
-					elseif typeof(b) == "table" and typeof(b.Name) == "string" then b.Name
-					else ""
+				local bStr = if typeof(b) == "string" then b elseif typeof(b) == "Instance" then b.Name elseif typeof(b) == "table" and typeof(b.Name) == "string" then b.Name else ""
 
 				return #aStr < #bStr
 			end
@@ -169,21 +203,17 @@ end
 --[=[
 	Splits a string using a simple separator (no quote parsing)
 ]=]
-function Util.SplitStringSimple(input: string, sep: string?): { string }
-	if sep == nil then
-		sep = "%s"
-	end
-	local t = {}
-	local i = 1
-	for str in string.gmatch(input, "([^" .. (sep :: string) .. "]+)") do
-		t[i] = str
-		i = i + 1
-	end
-	return t
-end
+function Util.SplitStringSimple(input: string, seperator: string?): { string }
+	seperator = seperator or "%s"
 
-local function charCode(n)
-	return utf8.char(tonumber(n, 16) :: number)
+	local segments = {}
+	local index = 1
+	for string in string.gmatch(input, "([^" .. (seperator :: string) .. "]+)") do
+		segments[index] = string
+		index = index + 1
+	end
+
+	return segments
 end
 
 --[=[
@@ -194,26 +224,25 @@ function Util.ParseEscapeSequences(text: string): string
 		t = "\t",
 		n = "\n",
 	})
-		:gsub("\\u(%x%x%x%x)", charCode)
-		:gsub("\\x(%x%x)", charCode)
+		:gsub("\\u(%x%x%x%x)", hexToChar)
+		:gsub("\\x(%x%x)", hexToChar)
 end
 
 --[=[
 	Encodes escaped operators in a string, replacing them with their unicode representations.
 ]=]
-function Util.EncodeEscapedOperator(text: string, op: string): string
-	local first = op:sub(1, 1)
-	local escapedOp = op:gsub(".", "%%%1")
-	local escapedFirst = "%" .. first
+function Util.EncodeEscapedOperator(text: string, operator: string): string
+	const first = operator:sub(1, 1)
+	const escapedOp = operator:gsub("(.)", "%%%1")
+	const escapedFirst = "%" .. first
 
 	return text:gsub("(" .. escapedFirst .. "+)(" .. escapedOp .. ")", function(esc, operator)
 		return (esc:sub(1, #esc - 1) .. operator):gsub(".", function(char)
-			return "\\u" .. string.format("%04x", string.byte(char), 16)
+			return "\\u" .. string.format("%04x", string.byte(char))
 		end)
 	end)
 end
 
-local OPERATORS = { "&&", "||", ";" }
 --[=[
 	Encodes all escaped operators in a string, replacing them with their unicode representations.
 ]=]
@@ -225,65 +254,71 @@ function Util.EncodeEscapedOperators(text: string): string
 	return text
 end
 
-local function encodeControlChars(text)
-	return (
-		text:gsub("\\\\", "___!CMDR_ESCAPE!___")
-			:gsub('\\"', "___!CMDR_QUOTE!___")
-			:gsub("\\'", "___!CMDR_SQUOTE!___")
-			:gsub("\\\n", "___!CMDR_NL!___")
-	)
-end
-
-local function decodeControlChars(text)
-	return (text:gsub("___!CMDR_ESCAPE!___", "\\"):gsub("___!CMDR_QUOTE!___", '"'):gsub("___!CMDR_NL!___", "\n"))
-end
-
 --[=[
 	Splits a string by space but taking into account quoted sequences which will be treated as a single argument.
 ]=]
 function Util.SplitString(text: string, max: number): { string }
 	text = encodeControlChars(text)
 	max = max or math.huge
-	local t = {}
-	local spat, epat = [=[^(['"])]=], [=[(['"])$]=]
-	local buf, quoted
-	for str in text:gmatch("[^ ]+") do
-		str = Util.ParseEscapeSequences(str)
-		local squoted = str:match(spat)
-		local equoted = str:match(epat)
-		local escaped = str:match([=[(\*)['"]$]=])
-		if squoted and not quoted and not equoted then
-			buf, quoted = str, squoted
-		elseif buf and equoted == quoted and #escaped % 2 == 0 then
-			str, buf, quoted = buf .. " " .. str, nil, nil
-		elseif buf then
-			buf = buf .. " " .. str
-		end
-		if not buf then
-			t[#t + (#t > max and 0 or 1)] = decodeControlChars(str:gsub(spat, ""):gsub(epat, ""))
+
+	local segments = {}
+	local buffer = nil
+	local quoteChar = nil
+
+	const function addSegment(segment: string)
+		if #segments > max then
+			segments[max] ..= " " .. segment
+		else
+			segments[#segments + 1] = segment
 		end
 	end
 
-	if buf then
-		t[#t + (#t > max and 0 or 1)] = decodeControlChars(buf)
+	for segment in text:gmatch("[^ ]+") do
+		segment = Util.ParseEscapeSequences(segment)
+
+		const startsWithQuote = segment:match(START_QUOTE_PATTERN)
+		const endsWithQuote = segment:match(END_QUOTE_PATTERN)
+		const escapedQuotes = segment:match(ESCAPED_QUOTE_PATTERN)
+
+		if startsWithQuote and not quoteChar and not endsWithQuote then
+			buffer = segment
+			quoteChar = startsWithQuote
+		elseif buffer and endsWithQuote == quoteChar and #escapedQuotes % 2 == 0 then
+			buffer = buffer .. " " .. segment
+
+			addSegment(decodeControlChars(buffer:gsub(START_QUOTE_PATTERN, ""):gsub(END_QUOTE_PATTERN, "")))
+
+			buffer = nil
+			quoteChar = nil
+		elseif buffer then
+			buffer ..= " " .. segment
+		else
+			addSegment(decodeControlChars(segment:gsub(START_QUOTE_PATTERN, ""):gsub(END_QUOTE_PATTERN, "")))
+		end
 	end
 
-	return t
+	if buffer then
+		addSegment(decodeControlChars(buffer))
+	end
+
+	return segments
 end
 
 --[=[
 	Takes an array of arguments and a max value. Any indicies past the max value will be appended to the last valid argument.
 ]=]
 function Util.MashExcessArguments(arguments: { string }, max: number): { string }
-	local t = {}
-	for i = 1, #arguments do
-		if i > max then
-			t[max] = ("%s %s"):format(t[max] or "", arguments[i])
+	local results = {}
+
+	for argumentIndex = 1, #arguments do
+		if argumentIndex > max then
+			results[max] = string.format("%s %s", results[max] or "", arguments[argumentIndex])
 		else
-			t[i] = arguments[i]
+			results[argumentIndex] = arguments[argumentIndex]
 		end
 	end
-	return t
+
+	return results
 end
 
 --[=[
@@ -291,7 +326,6 @@ end
 ]=]
 function Util.TrimString(str: string): string
 	local _, from = string.find(str, "^%s*")
-	-- trim the string in two steps to prevent quadratic backtracking when no "%S" match is found
 	return from == #str and "" or string.match(str, ".*%S", from + 1)
 end
 
@@ -303,19 +337,21 @@ function Util.GetTextSize(text: string, label: TextLabel, size: Vector2?): Vecto
 end
 
 --[=[
-	Makes an Enum type.
 	@return TypeDefinition
+	Makes an Enum type.
 ]=]
-function Util.MakeEnumType(name: string, values: any)
-	local findValue = Util.MakeFuzzyFinder(values)
+function Util.MakeEnumType(name: string, values: any): { [string]: any }
+	const findValue = Util.MakeFuzzyFinder(values)
 	return {
 		Validate = function(text)
-			return findValue(text, true) ~= nil, ("Value %q is not a valid %s."):format(text, name)
+			return findValue(text, true) ~= nil, `Value {text} is not a valid {name}.`
 		end,
+
 		Autocomplete = function(text)
 			local list = findValue(text)
 			return type(list[1]) ~= "string" and Util.GetNames(list) or list
 		end,
+
 		Parse = function(text)
 			return findValue(text, true)
 		end,
@@ -330,10 +366,10 @@ function Util.ParsePrefixedUnionType(typeValue: string, rawValue: string): (stri
 
 	-- Check prefixes in order from longest to shortest
 	local types = {}
-	for i = 1, #split, 2 do
+	for splitIndex = 1, #split, 2 do
 		types[#types + 1] = {
-			prefix = split[i - 1] or "",
-			type = split[i],
+			prefix = split[splitIndex - 1] or "",
+			type = split[splitIndex],
 		}
 	end
 
@@ -341,11 +377,11 @@ function Util.ParsePrefixedUnionType(typeValue: string, rawValue: string): (stri
 		return #a.prefix > #b.prefix
 	end)
 
-	for i = 1, #types do
-		local t = types[i]
+	for typeIndex = 1, #types do
+		local typeInfo = types[typeIndex]
 
-		if rawValue:sub(1, #t.prefix) == t.prefix then
-			return t.type, rawValue:sub(#t.prefix + 1), t.prefix
+		if rawValue:sub(1, #typeInfo.prefix) == typeInfo.prefix then
+			return typeInfo.type, rawValue:sub(#typeInfo.prefix + 1), typeInfo.prefix
 		end
 	end
 
@@ -353,22 +389,23 @@ function Util.ParsePrefixedUnionType(typeValue: string, rawValue: string): (stri
 end
 
 --[=[
-	Creates a listable type from a singular type
-	@param type TypeDefinition
+	@param typeDefinition TypeDefinition
 	@param override table
 	@return TypeDefinition
+
+	Creates a listable type from a singular type
 ]=]
-function Util.MakeListableType(type, override)
-	local listableType = {
+function Util.MakeListableType(typeDefinition: any, override: { [string]: any }?): { [string]: any }
+	local listableType: { [string]: any } = {
 		Listable = true,
-		Transform = type.Transform,
-		Validate = type.Validate,
-		ValidateOnce = type.ValidateOnce,
-		Autocomplete = type.Autocomplete,
-		Default = type.Default,
-		ArgumentOperatorAliases = type.ArgumentOperatorAliases,
+		Transform = typeDefinition.Transform,
+		Validate = typeDefinition.Validate,
+		ValidateOnce = typeDefinition.ValidateOnce,
+		Autocomplete = typeDefinition.Autocomplete,
+		Default = typeDefinition.Default,
+		ArgumentOperatorAliases = typeDefinition.ArgumentOperatorAliases,
 		Parse = function(...)
-			return { type.Parse(...) }
+			return { typeDefinition.Parse(...) }
 		end,
 	}
 
@@ -381,45 +418,37 @@ function Util.MakeListableType(type, override)
 	return listableType
 end
 
-local function encodeCommandEscape(text)
-	return (text:gsub("\\%$", "___!CMDR_DOLLAR!___"))
-end
-
-local function decodeCommandEscape(text)
-	return (text:gsub("___!CMDR_DOLLAR!___", "$"))
-end
-
 --[=[
-	Creates a listable type from a singular type
 	@param dispatcher Dispatcher
 	@return string? -- output from Dispatcher:EvaluateAndRun as a string
+
+	Creates a listable type from a singular type
 ]=]
-function Util.RunCommandString(dispatcher, commandString: string): string?
+function Util.RunCommandString(dispatcher: any, commandString: string): string?
 	commandString = Util.ParseEscapeSequences(commandString)
 	commandString = Util.EncodeEscapedOperators(commandString)
 
-	local commands = commandString:split("&&")
-
+	const commands = commandString:split("&&")
 	local output = ""
-	for i, command in ipairs(commands) do
+	for commandIndex, command in ipairs(commands) do
 		local outputEncoded = output:gsub("%$", "\\x24"):gsub("%%", "%%%%")
-		command = command:gsub("||", output:find("%s") and ("%q"):format(outputEncoded) or outputEncoded)
+		command = command:gsub("||", output:find("%s") and quoteString(outputEncoded) or outputEncoded)
 
 		output = tostring(dispatcher:EvaluateAndRun((Util.RunEmbeddedCommands(dispatcher, command))))
 
-		if i == #commands then
+		if commandIndex == #commands then
 			return output
 		end
 	end
+
 	return
 end
 
 --[=[
-	Runs embedded commands and replaces them
 	@param dispatcher Dispatcher
-	@param str string
+	Runs embedded commands and replaces them
 ]=]
-function Util.RunEmbeddedCommands(dispatcher, str): string
+function Util.RunEmbeddedCommands(dispatcher: any, str: string): string
 	str = encodeCommandEscape(str)
 
 	local results = {}
@@ -437,47 +466,45 @@ function Util.RunEmbeddedCommands(dispatcher, str): string
 
 		if doQuotes then
 			if results[text]:find("%s") or results[text] == "" then
-				results[text] = string.format("%q", results[text])
+				results[text] = quoteString(results[text])
 			end
 		end
 	end
 
-	return decodeCommandEscape(str:gsub("$(%b{})", results))
+	const escaped = (str:gsub("%$(%b{})", results))
+	return decodeCommandEscape(escaped)
 end
 
 --[=[
 	Replaces arguments in the format $1, $2, $something with whatever the given function returns for it.
-	@param str string
-	@param replace string
 ]=]
-function Util.SubstituteArgs(str, replace): string
+function Util.SubstituteArgs(str: string, replace: any): string
 	str = encodeCommandEscape(str)
-	-- Convert numerical keys to strings
-	if type(replace) == "table" then
-		for i = 1, #replace do
-			local k = tostring(i)
-			replace[k] = replace[i]
 
-			if replace[k]:find("%s") then
-				replace[k] = string.format("%q", replace[k])
+	if type(replace) == "table" then
+		for index = 1, #replace do
+			const key = tostring(index)
+			replace[key] = replace[index]
+
+			if replace[key]:find("%s") then
+				replace[key] = quoteString(replace[key])
 			end
 		end
 	end
-	return decodeCommandEscape(str:gsub("($%d+)%b{}", "%1"):gsub("$(%w+)", replace))
+
+	const escaped = str:gsub("%$(%d+)%b{}", "$%1"):gsub("%$(%w+)", replace)
+	return decodeCommandEscape(escaped)
 end
 
 --[=[
-	Creates an alias command, should only be used on the client.
 	@return CommandDefinition
+	Creates an alias command, should only be used on the client.
 ]=]
-function Util.MakeAliasCommand(name: string, commandString: string)
-	local commandName, commandDescription = unpack(name:split("|"))
-	local args = {}
+function Util.MakeAliasCommand(name: string, commandString: string): { [string]: any }
+	const commandName, commandDescription = unpack(name:split("|"))
+	local args, seenArgs = {}, {}
 
 	commandString = Util.EncodeEscapedOperators(commandString)
-
-	local seenArgs = {}
-
 	for arg in commandString:gmatch("$(%d+)") do
 		if seenArgs[arg] == nil then
 			seenArgs[arg] = true
@@ -516,21 +543,22 @@ function Util.MakeAliasCommand(name: string, commandString: string)
 end
 
 --[=[
-	Makes a type that contains a sequence, e.g. Vector3 or Color3
-
-	For options, one of Constructor or Parse is required
-
 	@param options { Transform: function?, Parse: function?, Constructor: function?, TransformEach: function?, ValidateEach: function?, Prefixes: {string}?, Length: number? }
 	@return ArgumentDefinition
+
+	Makes a type that contains a sequence, e.g. Vector3 or Color3
+	For options, one of Constructor or Parse is required
 ]=]
-function Util.MakeSequenceType(options)
-	options = options or {}
-
-	assert(
-		options.Parse ~= nil or options.Constructor ~= nil,
-		"[Cmdr] MakeSequenceType: Must provide one of: Constructor, Parse"
-	)
-
+function Util.MakeSequenceType(options: {
+	Transform: ((string) -> any)?,
+	Parse: (({ string }) -> any)?,
+	Constructor: ((...any) -> any)?,
+	TransformEach: ((string) -> any)?,
+	ValidateEach: ((any, number) -> (boolean, string?))?,
+	Prefixes: { string }?,
+	Length: number?,
+}): { [string]: any }
+	assert(options.Parse ~= nil or options.Constructor ~= nil, "[Cmdr] MakeSequenceType: Must provide one of: Constructor, Parse")
 	options.TransformEach = options.TransformEach or function(...)
 		return ...
 	end
@@ -539,11 +567,15 @@ function Util.MakeSequenceType(options)
 		return true
 	end
 
+	assert(options.TransformEach) --< Luau Language Server type fix
+	assert(options.ValidateEach) --< Luau Language Server type fix
+
 	return {
 		Prefixes = options.Prefixes,
 
-		Transform = options.Transform or function(text)
-			return Util.Map(Util.SplitPrioritizedDelimeter(text, { ",", "%s" }), function(value)
+		Transform = options.Transform or function(text: string)
+			const elements = Util.SplitPrioritizedDelimeter(text, { ",", "%s" })
+			return Util.Map(elements, function(value: string)
 				return options.TransformEach(value)
 			end)
 		end,
@@ -553,9 +585,8 @@ function Util.MakeSequenceType(options)
 				return false, ("Maximum of %d values allowed in sequence"):format(options.Length)
 			end
 
-			for i = 1, options.Length or #components do
-				local valid, reason = options.ValidateEach(components[i], i)
-
+			for componentIndex = 1, options.Length or #components do
+				const valid, reason = options.ValidateEach(components[componentIndex], componentIndex)
 				if not valid then
 					return false, reason
 				end
@@ -574,25 +605,23 @@ end
 	Splits a string by a single delimeter chosen from the given set. The first matching delimeter from the set becomes the split character.
 ]=]
 function Util.SplitPrioritizedDelimeter(text: string, delimiters: { string }): { string }?
-	for i, delimeter in ipairs(delimiters) do
-		if text:find(delimeter) or i == #delimiters then
-			return Util.SplitStringSimple(text, delimeter)
+	for delimiterIndex, delimiter in ipairs(delimiters) do
+		if text:find(delimiter) or delimiterIndex == #delimiters then
+			return Util.SplitStringSimple(text, delimiter)
 		end
 	end
+
 	return
 end
 
 --[=[
 	Maps values of an array through a callback and returns an array of mapped values.
-	@param array { any } -- The array to map through.
-	@param callback function -- The callback function to call for each value in the array.
-	@return { any } -- An array of mapped values.
 ]=]
-function Util.Map(array, callback)
-	local results = {}
+function Util.Map(array: { any }, callback: (any, number) -> any): { any }
+	local results: { any } = {}
 
-	for i, v in ipairs(array) do
-		results[i] = callback(v, i)
+	for index, value in ipairs(array) do
+		results[index] = callback(value, index)
 	end
 
 	return results
@@ -600,52 +629,50 @@ end
 
 --[=[
 	Maps arguments #2-n through callback and returns values as tuple.
-	@param callback function -- The callback function to call for each value in the arguments.
-	@param ... any -- The values to map through the callback.
-	@return ... any -- The mapped values as a tuple.
 ]=]
-function Util.Each(callback, ...)
-	local results = {}
-	for i, value in ipairs({ ... }) do
-		results[i] = callback(value)
+function Util.Each(callback: (any) -> any, ...: any): ...any
+	local results: { any } = {}
+	for index, value in ipairs({ ... }) do
+		results[index] = callback(value)
 	end
+
 	return unpack(results)
 end
 
 --[=[
 	Emulates tabstops with spaces.
-	@param text string -- The text to emulate tabstops for.
-	@param tabWidth number -- The width of each tabstop.
-	@return string -- The text with tabstops replaced by spaces.
 ]=]
-function Util.EmulateTabstops(text, tabWidth)
-	local column = 0
-	local textLength = #text
-	local result = table.create(textLength)
-	for i = 1, textLength do
-		local char = string.sub(text, i, i)
-		if char == "\t" then
-			local spaces = tabWidth - column % tabWidth
-			table.insert(result, string.rep(" ", spaces))
-			column += spaces
+function Util.EmulateTabstops(text: string, tabWidth: number): string
+	local currentColumn = 0
+	local result = table.create(#text)
+
+	for index = 1, #text do
+		local character = text:sub(index, index)
+
+		if character == "\t" then
+			local spaces = tabWidth - currentColumn % tabWidth
+			result[index] = string.rep(" ", spaces)
+			currentColumn += spaces
 		else
-			table.insert(result, char)
-			if char == "\n" then
-				column = 0 -- Reset column counter on newlines
-			elseif char ~= "\r" then
-				column += 1
+			result[index] = character
+
+			if character == "\n" then
+				currentColumn = 0
+			elseif character ~= "\r" then
+				currentColumn += 1
 			end
 		end
 	end
+
 	return table.concat(result)
 end
 
 --[=[
-	Creates a mutex for synchronizing coroutines.
 	@return function -- A function that locks the mutex and returns a function to unlock it.
+	Creates a mutex for synchronizing coroutines.
 ]=]
-function Util.Mutex()
-	local queue = {}
+function Util.Mutex(): () -> ()
+	local queue: { thread } = {}
 	local locked = false
 
 	return function()
@@ -658,7 +685,8 @@ function Util.Mutex()
 
 		return function()
 			if #queue > 0 then
-				coroutine.resume(table.remove(queue, 1))
+				local nextThread = table.remove(queue, 1)
+				coroutine.resume(nextThread)
 			else
 				locked = false
 			end
@@ -667,17 +695,12 @@ function Util.Mutex()
 end
 
 --[=[
-	Registers a deprecation warning for a method.
-	@param name string -- The name of the method being deprecated.
-	@param description string -- A description of the deprecation warning.
 	@private
+	Registers a deprecation warning for a method.
 ]=]
 function Util:_registerDeprecationWarning(name: string, description: string)
 	assert(type(name) == "string" and #name > 0, "[Cmdr] Deprecation warning name must be a string.")
-	assert(
-		type(description) == "string" and #description > 0,
-		"[Cmdr] Deprecation warning description must be a string."
-	)
+	assert(type(description) == "string" and #description > 0, "[Cmdr] Deprecation warning description must be a string.")
 	assert(not self._deprecationWarnings[name], `[Cmdr] Deprecation warning {name} is already registered.`)
 
 	self._deprecationWarnings[name] = {
@@ -688,9 +711,8 @@ function Util:_registerDeprecationWarning(name: string, description: string)
 end
 
 --[=[
-	Emits a deprecation warning for a method if it has been called. This should be called at the start of a deprecated method.
-	@param name string -- The name of the method being deprecated.
 	@private
+	Emits a deprecation warning for a method if it has been called. This should be called at the start of a deprecated method.
 ]=]
 function Util:_emitDeprecationWarning(name: string)
 	local warningInfo = self._deprecationWarnings[name]
@@ -704,20 +726,16 @@ end
 
 --[=[
 	Suppresses a deprecation warning for a method.
-	@param warnings string | { string } -- The name(s) of the method(s) to suppress warnings for.
 ]=]
-function Util:SuppressDeprecationWarning(warnings: string | { string })
-	assert(
-		type(warnings) == "string" or type(warnings) == "table",
-		"[Cmdr] Deprecation warning name(s) must be a string or an array of strings."
-	)
-	assert(#warnings > 0, "[Cmdr] Deprecation warning name(s) must not be empty.")
+function Util:SuppressDeprecationWarning(names: string | { string })
+	assert(type(names) == "string" or type(names) == "table", "[Cmdr] Deprecation warning name(s) must be a string or an array of strings.")
+	assert(#names > 0, "[Cmdr] Deprecation warning name(s) must not be empty.")
 
-	if type(warnings) == "string" then
-		warnings = { warnings }
+	if type(names) == "string" then
+		names = { names }
 	end
 
-	for _, name in pairs(warnings) do
+	for _, name in pairs(names) do
 		assert(type(name) == "string", "[Cmdr] Deprecation warning names must be strings.")
 		assert(self._deprecationWarnings[name], `[Cmdr] Unknown deprecation warning {name}.`)
 		self._deprecationWarnings[name].Suppressed = true

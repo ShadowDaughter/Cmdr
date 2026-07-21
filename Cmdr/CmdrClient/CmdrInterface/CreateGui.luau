@@ -4,7 +4,7 @@ local StarterGui = game:GetService("StarterGui")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-return function()
+return function(): ScreenGui
 	if StarterGui:FindFirstChild("Cmdr") then
 		return PlayerGui:WaitForChild("Cmdr")
 	end

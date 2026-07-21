@@ -25,33 +25,19 @@ return function(Cmdr)
 		textObj.Text = text or ""
 
 		if sizeFromContents then
-			textObj.Size = UDim2.new(
-				0,
-				Util.GetTextSize(text or "", textObj, Vector2.new(1000, 1000), 1, 0).X,
-				obj.Size.Y.Scale,
-				obj.Size.Y.Offset
-			)
+			textObj.Size = UDim2.new(0, Util.GetTextSize(text or "", textObj, Vector2.new(1000, 1000), 1, 0).X, obj.Size.Y.Scale, obj.Size.Y.Offset)
 		end
 	end
 
 	local function UpdateContainerSize()
-		Gui.Size = UDim2.new(
-			0,
-			math.max(Title.Field.TextBounds.X + Title.Field.Type.TextBounds.X, Gui.Size.X.Offset),
-			0,
-			math.min(Gui.UIListLayout.AbsoluteContentSize.Y, Gui.Parent.AbsoluteSize.Y - Gui.AbsolutePosition.Y - 10)
-		)
+		Gui.Size = UDim2.new(0, math.max(Title.Field.TextBounds.X + Title.Field.Type.TextBounds.X, Gui.Size.X.Offset), 0, math.min(Gui.UIListLayout.AbsoluteContentSize.Y, Gui.Parent.AbsoluteSize.Y - Gui.AbsolutePosition.Y - 10))
 	end
 
 	-- Update the info display (Name, type, and description) based on given options.
 	local function UpdateInfoDisplay(options)
 		-- Update the objects' text and sizes
 		SetText(Title, Title.Field, options.name, true)
-		SetText(
-			Title.Field.Type,
-			Title.Field.Type,
-			options.type and ": " .. options.type:sub(1, 1):upper() .. options.type:sub(2)
-		)
+		SetText(Title.Field.Type, Title.Field.Type, options.type and ": " .. options.type:sub(1, 1):upper() .. options.type:sub(2))
 		SetText(Description, Description.Label, options.description)
 
 		Description.Label.TextColor3 = options.invalid and Color3.fromRGB(255, 73, 73) or Color3.fromRGB(255, 255, 255)
@@ -124,9 +110,7 @@ return function(Cmdr)
 				start, stop = 1, string.len(rightText)
 			end
 			btn.Typed.Text = string.rep(" ", start - 1) .. leftText
-			btn.Suggest.Text = string.sub(rightText, 0, start - 1)
-				.. string.rep(" ", #leftText)
-				.. string.sub(rightText, stop + 1)
+			btn.Suggest.Text = string.sub(rightText, 0, start - 1) .. string.rep(" ", #leftText) .. string.sub(rightText, stop + 1)
 
 			btn.Parent = Gui
 			btn.LayoutOrder = i
@@ -151,8 +135,7 @@ return function(Cmdr)
 		local extra = (options.at and options.at or (#table.concat(words, " ") + 1)) * 7
 
 		-- Update the auto complete container
-		Gui.Position =
-			UDim2.fromOffset(Entry.TextBox.AbsolutePosition.X - 10 + extra, Entry.TextBox.AbsolutePosition.Y + 30)
+		Gui.Position = UDim2.fromOffset(Entry.TextBox.AbsolutePosition.X - 10 + extra, Entry.TextBox.AbsolutePosition.Y + 30)
 		Gui.Size = UDim2.fromOffset(autocompleteWidth, Gui.UIListLayout.AbsoluteContentSize.Y)
 		Gui.Visible = true
 
@@ -197,16 +180,7 @@ return function(Cmdr)
 			item.gui.BackgroundTransparency = i == self.SelectedItem and 0.5 or 1
 		end
 
-		Gui.CanvasPosition = Vector2.new(
-			0,
-			math.max(
-				0,
-				Title.Size.Y.Offset
-					+ Description.Size.Y.Offset
-					+ self.SelectedItem * AutoItem.Size.Y.Offset
-					- Gui.Size.Y.Offset
-			)
-		)
+		Gui.CanvasPosition = Vector2.new(0, math.max(0, Title.Size.Y.Offset + Description.Size.Y.Offset + self.SelectedItem * AutoItem.Size.Y.Offset - Gui.Size.Y.Offset))
 
 		if self.Items[self.SelectedItem] and self.Items[self.SelectedItem].options then
 			UpdateInfoDisplay(self.Items[self.SelectedItem].options or {})
