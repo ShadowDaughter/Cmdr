@@ -645,7 +645,7 @@ export type Registry = typeof(setmetatable(Registry, Registry))
 return function(Cmdr): Registry
 	const ProtectedRegistry = { Cmdr = Cmdr }
 	return table.freeze(setmetatable(ProtectedRegistry, {
-		__index = function(self, key)
+		__index = function(_, key)
 			if Util._deprecationWarnings[key] then
 				Util:_emitDeprecationWarning(key)
 			end

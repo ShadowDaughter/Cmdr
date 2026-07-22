@@ -17,7 +17,7 @@ export type Dispatcher = typeof(setmetatable(Dispatcher, Dispatcher))
 return function(Cmdr): Dispatcher
 	const ProtectedDispatcher = { Cmdr = Cmdr }
 	return table.freeze(setmetatable(ProtectedDispatcher, {
-		__index = function(self, key)
+		__index = function(_, key)
 			if Util._deprecationWarnings[key] then
 				Util:_emitDeprecationWarning(key)
 			end

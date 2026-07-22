@@ -12,11 +12,6 @@ const ESCAPED_QUOTE_PATTERN = [=[(\*)['"]$]=]
 
 const OPERATORS = { "&&", "||", ";" }
 
--- Converts a hexadecimal string into a UTF-8 character.
-const function hexToChar(value: string): string
-	return utf8.char(tonumber(value, 16) :: number)
-end
-
 -- Converts instances into display names and keeps the original values.
 const function transformInstanceSet(instances: { any }): ({ string }, { any })
 	local names: { string } = {}
@@ -31,6 +26,11 @@ const function transformInstanceSet(instances: { any }): ({ string }, { any })
 	end
 
 	return names, instances
+end
+
+-- Converts a hexadecimal string into a UTF-8 character.
+const function hexToChar(value: string): string
+	return utf8.char(tonumber(value, 16) :: number)
 end
 
 -- Replaces escaped control characters with temporary placeholders.
@@ -78,6 +78,7 @@ const Util = {
 }
 
 --[=[
+	@within Util
 	Takes an array and flips its values into dictionary keys with value of true.
 ]=]
 function Util.MakeDictionary(array: { any }): { [any]: true }
@@ -91,6 +92,7 @@ function Util.MakeDictionary(array: { any }): { [any]: true }
 end
 
 --[=[
+	@within Util
 	Takes a dictionary and returns its keys.
 ]=]
 function Util.DictionaryKeys(dict: { [any]: any }): { any }
@@ -104,6 +106,8 @@ function Util.DictionaryKeys(dict: { [any]: any }): { any }
 end
 
 --[=[
+	@within Util
+
 	Returns a function that is a fuzzy finder for the specified set or container.
 
 	Can pass an array of strings, array of instances, array of EnumItems,
@@ -191,8 +195,9 @@ function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?)
 end
 
 --[=[
-	Takes an array of instances (or anything with a Name property) and maps them into an array of their names.
+	@within Util
 
+	Takes an array of instances (or anything with a Name property) and maps them into an array of their names.
 	If no Name property is present, then tostring will be called instead.
 ]=]
 function Util.GetNames(instances: any): { string }
@@ -201,6 +206,7 @@ function Util.GetNames(instances: any): { string }
 end
 
 --[=[
+	@within Util
 	Splits a string using a simple separator (no quote parsing)
 ]=]
 function Util.SplitStringSimple(input: string, seperator: string?): { string }
@@ -217,6 +223,7 @@ function Util.SplitStringSimple(input: string, seperator: string?): { string }
 end
 
 --[=[
+	@within Util
 	Parses escape sequences into their fully qualified characters
 ]=]
 function Util.ParseEscapeSequences(text: string): string
@@ -229,6 +236,7 @@ function Util.ParseEscapeSequences(text: string): string
 end
 
 --[=[
+	@within Util
 	Encodes escaped operators in a string, replacing them with their unicode representations.
 ]=]
 function Util.EncodeEscapedOperator(text: string, operator: string): string
@@ -244,6 +252,7 @@ function Util.EncodeEscapedOperator(text: string, operator: string): string
 end
 
 --[=[
+	@within Util
 	Encodes all escaped operators in a string, replacing them with their unicode representations.
 ]=]
 function Util.EncodeEscapedOperators(text: string): string
@@ -255,6 +264,7 @@ function Util.EncodeEscapedOperators(text: string): string
 end
 
 --[=[
+	@within Util
 	Splits a string by space but taking into account quoted sequences which will be treated as a single argument.
 ]=]
 function Util.SplitString(text: string, max: number): { string }
@@ -305,6 +315,7 @@ function Util.SplitString(text: string, max: number): { string }
 end
 
 --[=[
+	@within Util
 	Takes an array of arguments and a max value. Any indicies past the max value will be appended to the last valid argument.
 ]=]
 function Util.MashExcessArguments(arguments: { string }, max: number): { string }
@@ -322,6 +333,7 @@ function Util.MashExcessArguments(arguments: { string }, max: number): { string 
 end
 
 --[=[
+	@within Util
 	Trims whitespace from both sides of a string.
 ]=]
 function Util.TrimString(str: string): string
@@ -330,6 +342,7 @@ function Util.TrimString(str: string): string
 end
 
 --[=[
+	@within Util
 	Returns the text bounds size based on given text, label (from which properties will be pulled), and optional Vector2 container size.
 ]=]
 function Util.GetTextSize(text: string, label: TextLabel, size: Vector2?): Vector2
@@ -337,7 +350,9 @@ function Util.GetTextSize(text: string, label: TextLabel, size: Vector2?): Vecto
 end
 
 --[=[
+	@within Util
 	@return TypeDefinition
+
 	Makes an Enum type.
 ]=]
 function Util.MakeEnumType(name: string, values: any): { [string]: any }
@@ -359,6 +374,7 @@ function Util.MakeEnumType(name: string, values: any): { [string]: any }
 end
 
 --[=[
+	@within Util
 	Parses a prefixed union type argument (such as %Team)
 ]=]
 function Util.ParsePrefixedUnionType(typeValue: string, rawValue: string): (string?, string?, string?)
@@ -389,6 +405,8 @@ function Util.ParsePrefixedUnionType(typeValue: string, rawValue: string): (stri
 end
 
 --[=[
+	@within Util
+
 	@param typeDefinition TypeDefinition
 	@param override table
 	@return TypeDefinition
@@ -419,8 +437,8 @@ function Util.MakeListableType(typeDefinition: any, override: { [string]: any }?
 end
 
 --[=[
+	@within Util
 	@param dispatcher Dispatcher
-	@return string? -- output from Dispatcher:EvaluateAndRun as a string
 
 	Creates a listable type from a singular type
 ]=]
@@ -445,7 +463,9 @@ function Util.RunCommandString(dispatcher: any, commandString: string): string?
 end
 
 --[=[
+	@within Util
 	@param dispatcher Dispatcher
+
 	Runs embedded commands and replaces them
 ]=]
 function Util.RunEmbeddedCommands(dispatcher: any, str: string): string
@@ -476,6 +496,7 @@ function Util.RunEmbeddedCommands(dispatcher: any, str: string): string
 end
 
 --[=[
+	@within Util
 	Replaces arguments in the format $1, $2, $something with whatever the given function returns for it.
 ]=]
 function Util.SubstituteArgs(str: string, replace: any): string
@@ -497,7 +518,9 @@ function Util.SubstituteArgs(str: string, replace: any): string
 end
 
 --[=[
+	@within Util
 	@return CommandDefinition
+
 	Creates an alias command, should only be used on the client.
 ]=]
 function Util.MakeAliasCommand(name: string, commandString: string): { [string]: any }
@@ -543,6 +566,8 @@ function Util.MakeAliasCommand(name: string, commandString: string): { [string]:
 end
 
 --[=[
+	@within Util
+
 	@param options { Transform: function?, Parse: function?, Constructor: function?, TransformEach: function?, ValidateEach: function?, Prefixes: {string}?, Length: number? }
 	@return ArgumentDefinition
 
@@ -602,6 +627,7 @@ function Util.MakeSequenceType(options: {
 end
 
 --[=[
+	@within Util
 	Splits a string by a single delimeter chosen from the given set. The first matching delimeter from the set becomes the split character.
 ]=]
 function Util.SplitPrioritizedDelimeter(text: string, delimiters: { string }): { string }?
@@ -615,6 +641,7 @@ function Util.SplitPrioritizedDelimeter(text: string, delimiters: { string }): {
 end
 
 --[=[
+	@within Util
 	Maps values of an array through a callback and returns an array of mapped values.
 ]=]
 function Util.Map(array: { any }, callback: (any, number) -> any): { any }
@@ -628,6 +655,7 @@ function Util.Map(array: { any }, callback: (any, number) -> any): { any }
 end
 
 --[=[
+	@within Util
 	Maps arguments #2-n through callback and returns values as tuple.
 ]=]
 function Util.Each(callback: (any) -> any, ...: any): ...any
@@ -640,6 +668,7 @@ function Util.Each(callback: (any) -> any, ...: any): ...any
 end
 
 --[=[
+	@within Util
 	Emulates tabstops with spaces.
 ]=]
 function Util.EmulateTabstops(text: string, tabWidth: number): string
@@ -668,7 +697,9 @@ function Util.EmulateTabstops(text: string, tabWidth: number): string
 end
 
 --[=[
+	@within Util
 	@return function -- A function that locks the mutex and returns a function to unlock it.
+
 	Creates a mutex for synchronizing coroutines.
 ]=]
 function Util.Mutex(): () -> ()
@@ -695,7 +726,9 @@ function Util.Mutex(): () -> ()
 end
 
 --[=[
+	@within Util
 	@private
+
 	Registers a deprecation warning for a method.
 ]=]
 function Util:_registerDeprecationWarning(name: string, description: string)
@@ -711,7 +744,9 @@ function Util:_registerDeprecationWarning(name: string, description: string)
 end
 
 --[=[
+	@within Util
 	@private
+
 	Emits a deprecation warning for a method if it has been called. This should be called at the start of a deprecated method.
 ]=]
 function Util:_emitDeprecationWarning(name: string)
@@ -725,6 +760,7 @@ function Util:_emitDeprecationWarning(name: string)
 end
 
 --[=[
+	@within Util
 	Suppresses a deprecation warning for a method.
 ]=]
 function Util:SuppressDeprecationWarning(names: string | { string })

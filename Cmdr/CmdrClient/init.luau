@@ -11,6 +11,9 @@ const Util = require("@self/Shared/Util")
 const CmdrInterface = require("@self/CmdrInterface")
 const DefaultEventHandlers = require("@self/DefaultEventHandlers")
 
+const TYPES_FOLDER = script:WaitForChild("Types") :: Folder
+const COMMANDS_FOLDER = script:WaitForChild("Commands") :: Folder
+
 type Signal = {
 	Fire: (self: Signal, ...any) -> (),
 	Connect: (self: Signal, callback: (...any) -> ()) -> RBXScriptConnection,
@@ -137,6 +140,45 @@ end
 	@readonly
 	@private
 
+	@prop _activationUnlocksMouse boolean
+
+	Whether or not acitvating the Cmdr window will unlock the mouse.
+]=]
+
+--[=[
+	@within CmdrClient
+	@readonly
+	@private
+
+	@prop _mashToOpen boolean
+
+	Whether or not mashing to open is enabled. Use [`CmdrClient:SetMashToOpen`](#SetMashToOpen) to change.
+]=]
+
+--[=[
+	@within CmdrClient
+	@readonly
+	@private
+
+	@prop _hideOnLostFocus boolean
+
+	Whether or not loosing focus will hide the Cmdr window.
+]=]
+
+--[=[
+	@within CmdrClient
+	@readonly
+
+	@prop PlaceName string
+
+	The current place name, displayed on the interface. Use [`CmdrClient:SetPlaceName`](#SetPlaceName) to change.
+]=]
+
+--[=[
+	@within CmdrClient
+	@readonly
+	@private
+
 	@prop _events { [string]: (any) -> () }
 
 	A collection of event callbacks used by Cmdr.
@@ -157,6 +199,11 @@ local CmdrClient = {
 
 	_enabled = true,
 	_activationKeys = { Enum.KeyCode.F2 },
+	_activationUnlocksMouse = false,
+	_mashToOpen = false,
+	_hideOnLostFocus = true,
+
+	PlaceName = "Cmdr",
 
 	_events = {} :: { [string]: (any) -> () },
 }
@@ -177,6 +224,96 @@ function CmdrClient:SetActivationKeys(keys: { Enum.KeyCode })
 	self._activationKeys = keys
 end
 
+--[=[
+	@within CmdrClient
+	Sets the key codes that will used to toggle Cmdr.
+]=]
+function CmdrClient:SetActivationUnlocksmouse(enabled: boolean)
+	self._activationUnlocksMouse = enabled
+end
+
+--[=[
+@within CmdrClient
+	Shows the Cmdr window. Does nothing if Cmdr isn't enabled.
+]=]
+function CmdrClient:Show()
+	if not self._enabled then
+		return
+	end
+
+	self._interface.Window:Show()
+end
+
+--[=[
+@within CmdrClient
+	Hides the Cmdr window.
+]=]
+function CmdrClient:Hide()
+	self._interface.Window:Hide()
+end
+
+--[=[
+	@within CmdrClient
+	Toggles the Cmdr window. Does nothing if Cmdr isn't enabled.
+]=]
+function CmdrClient:Toggle()
+	if not self._enabled then
+		self:Hide()
+		return
+	end
+
+	self._interface.Window:SetVisible(not self._interface.Window:IsVisible())
+end
+
+--[=[
+	@within CmdrClient
+	Enables the "Mash to open" feature.
+	This feature, when enabled, requires the [activation key](#SetActivationKeys) to be pressed 5 times within a second to open Cmdr.
+	This may be helpful to guard against mispresses from opening the window, for example.
+	Once opened, mashing will be disabled for 10 seconds since it was last closed for convenience.
+]=]
+function CmdrClient:SetMashToOpen(enabled: boolean)
+	self._mashToOpen = enabled
+end
+
+--[=[
+	@within CmdrClient
+	@deprecated v1.13.0 -- This method was renamed to SetMashToOpen in v1.13.0. The old name exists for backwards compatibility and should not be used for new work.
+]=]
+function CmdrClient:SetMashToEnable(enabled: boolean)
+	Util:_emitDeprecationWarning("SetMashToEnable")
+	self:SetMashToOpen(enabled)
+end
+
+Util:_registerDeprecationWarning("SetMashToEnable", "This method was renamed to SetMashToOpen in v1.13.0. The old name exists for backwards compatibility and should not be used for new work.")
+
+--[=[
+	@within CmdrClient
+	Sets the hide on 'lost focus' feature.
+	This feature, which is enabled by default, will cause Cmdr to [hide](#Hide) when the user clicks off the window.
+]=]
+function CmdrClient:SetHideOnLostFocus(enabled: boolean)
+	self._hideOnLostFocus = enabled
+end
+
+--[=[
+	@within CmdrClient
+	Sets the place name label on the interface. This is useful for a quick way to tell what game you're playing in a universe game.
+]=]
+function CmdrClient:SetPlaceName(name: string)
+	self.PlaceName = name
+	self._interface.Window:UpdateLabelText()
+end
+
+--[=[
+	@within CmdrClient
+	Sets the [network event handler](/docs/networkeventhandlers) for a certain event type.
+]=]
+function CmdrClient:HandleEvent(name: string, callback: (...any) -> ())
+	self._events[name] = callback
+end
+
+-- Initialize CmdrClient
 const function initialize()
 	CmdrClient.Registry = Registry(CmdrClient)
 	CmdrClient.Dispatcher = Dispatcher(CmdrClient)
@@ -192,11 +329,33 @@ const function initialize()
 		CmdrClient._events[eventName](...)
 	end)
 
+	CmdrClient.Registry:RegisterTypesIn(TYPES_FOLDER)
+	CmdrClient.Registry:RegisterCommandsIn(COMMANDS_FOLDER)
+
+	TYPES_FOLDER.ChildAdded:Connect(function(child: Instance)
+		if not child:IsA("ModuleScript") then
+			warn(`[Cmdr] Ignored non-module child in Types: {child.Name}`)
+			return
+		end
+
+		require(child)(CmdrClient.Registry)
+	end)
+
+	COMMANDS_FOLDER.ChildAdded:Connect(function(child: Instance)
+		if not child:IsA("ModuleScript") then
+			warn(`[Cmdr] Ignored non-module child in Commands: {child.Name}`)
+			return
+		end
+
+		CmdrClient.Registry:RegisterCommand(child)
+	end)
+
 	DefaultEventHandlers(CmdrClient)
 end
 
 initialize()
 
+-- Export CmdrClient
 return table.freeze(setmetatable(CmdrClient, {
 	__index = function(self, key)
 		const dispatcher = rawget(self, "Dispatcher")

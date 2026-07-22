@@ -5,5 +5,6 @@
 sourcemap.json
 roblox.yml
 
-# Node
+# Node & Tooling
 node_modules
+build

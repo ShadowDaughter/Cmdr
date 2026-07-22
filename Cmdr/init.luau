@@ -103,6 +103,7 @@ local Cmdr = {
 	_defaultCommandsFolder = script.BuiltInCommands,
 }
 
+-- Initialize Cmdr
 const function initialize()
 	Cmdr.Registry = Registry(Cmdr)
 	Cmdr.Dispatcher = Dispatcher(Cmdr)
@@ -116,7 +117,7 @@ const function initialize()
 	Cmdr._remoteEvent = createObject("RemoteEvent", "CmdrEvent", Cmdr._replicatedRoot)
 	Cmdr._remoteFunction = createObject("RemoteFunction", "CmdrFunction", Cmdr._replicatedRoot)
 
-	Cmdr._remoteFunction.OnServerInvoke = function(player: Player, text: string, options: any) -- TODO: Update options type
+	Cmdr._remoteFunction.OnServerInvoke = function(player: Player, text: string, options)
 		if #text > 10000 then
 			return "Input too long"
 		end
@@ -127,6 +128,7 @@ end
 
 initialize()
 
+-- Export Cmdr
 return table.freeze(setmetatable(Cmdr, {
 	__index = function(self, key)
 		const registry = rawget(self, "Registry")

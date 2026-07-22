@@ -30,7 +30,10 @@ return function(Cmdr)
 	end
 
 	local function UpdateContainerSize()
-		Gui.Size = UDim2.new(0, math.max(Title.Field.TextBounds.X + Title.Field.Type.TextBounds.X, Gui.Size.X.Offset), 0, math.min(Gui.UIListLayout.AbsoluteContentSize.Y, Gui.Parent.AbsoluteSize.Y - Gui.AbsolutePosition.Y - 10))
+		Gui.Size = UDim2.fromOffset(
+			math.max(Title.Field.TextBounds.X + Title.Field.Type.TextBounds.X, Gui.Size.X.Offset),
+			math.min(Gui.UIListLayout.AbsoluteContentSize.Y, Gui.Parent.AbsoluteSize.Y - Gui.AbsolutePosition.Y - 10)
+		)
 	end
 
 	-- Update the info display (Name, type, and description) based on given options.
