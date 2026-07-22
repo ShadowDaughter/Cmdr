@@ -29,8 +29,6 @@ By default, these types are available:
 | `command`            | `string`                             | `commands`            | `{string}`                             |
 | `type`               | `string`                             | `types`               | `{string}`                             |
 | `userInput`          | `Enum.UserInputType \| Enum.KeyCode` | `userInputs`          | `{Enum.UserInputType \| Enum.KeyCode}` |
-| `conditionFunction`  | `function`                           |                       |                                        |
-| `bindableResource`   | `Instance`                           |                       |                                        |
 | `storedKey`          | `string`                             | `storedKeys`          | `{string}`                             |
 | `url`                | `string`                             | `urls`                | `{string}`                             |
 | `json`               | `any`                                |                       |                                        |

@@ -40,8 +40,8 @@ This hook is most useful for logging. Since we don't want to add this hook on th
 
 ```lua
 Cmdr.Registry:RegisterHook("AfterRun", function(context)
-  print(context.Response) -- see the actual response from the command execution
-  return "Returning a string from this hook replaces the response message with this text"
+	print(context.Response) -- see the actual response from the command execution
+	return "Returning a string from this hook replaces the response message with this text"
 end)
 ```
 

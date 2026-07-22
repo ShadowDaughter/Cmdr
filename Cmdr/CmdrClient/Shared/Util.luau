@@ -116,7 +116,85 @@ end
 	Exact matches will be inserted in the front of the resulting array.
 ]=]
 function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?) -> any
-	local names: { string }?
+	local containerType = typeof(setOrContainer)
+	assert(containerType == "table" or containerType == "Enum" or containerType == "Instance", "[Cmdr] MakeFuzzyFinder only accepts a table, Enum, or Instance.")
+
+	if containerType == "Enum" then
+		setOrContainer = setOrContainer:GetEnumItems()
+	elseif containerType == "Instance" then
+		setOrContainer = setOrContainer:GetChildren()
+	end
+
+	local names: { string }
+	local instances: { any } = {}
+	if #setOrContainer == 0 then
+		names = {}
+	else
+		const first = setOrContainer[1]
+		const firstType = typeof(first)
+
+		if firstType == "string" then
+			names = setOrContainer
+		else
+			const firstNameType = typeof(first.Name)
+			assert(firstType == "Instance" or firstType == "EnumItem" or (firstType == "table" and firstNameType == "string"), "[Cmdr] MakeFuzzyFinder only accepts tables of instances or strings.")
+			names, instances = transformInstanceSet(setOrContainer)
+		end
+	end
+
+	-- Searches the set (checking exact matches first)
+	return function(text: string, returnFirst: boolean?, matchStart: boolean?)
+		local resultsPriority = {}
+		local results = {}
+
+		for index, name in pairs(names) do
+			const value = instances and instances[index] or name
+
+			if name:lower() == text:lower() then
+				if returnFirst then
+					return value
+				end
+
+				results[#results + 1] = value
+				resultsPriority[value] = 0
+			elseif matchStart then
+				if name:lower():sub(1, #text) == text:lower() then
+					results[#results + 1] = value
+					resultsPriority[value] = 1
+				end
+			else
+				const startingIndex = name:lower():find(text:lower(), 1, true)
+				if startingIndex then
+					results[#results + 1] = value
+					resultsPriority[value] = startingIndex
+				end
+			end
+		end
+
+		table.sort(results, function(a, b)
+			const aPriority = resultsPriority[a]
+			const bPriority = resultsPriority[b]
+
+			if aPriority ~= bPriority then
+				return aPriority < bPriority
+			end
+
+			const aString = if typeof(a) == "string" then a elseif typeof(a) == "Instance" then a.Name elseif typeof(a) == "table" and typeof(a.Name) == "string" then a.Name else ""
+			const bString = if typeof(b) == "string" then b elseif typeof(b) == "Instance" then b.Name elseif typeof(b) == "table" and typeof(b.Name) == "string" then b.Name else ""
+
+			return #aString < #bString
+		end)
+
+		if returnFirst then
+			return results[1]
+		end
+
+		return results
+	end
+end
+
+--[[function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?) -> any
+	local names: { string }
 	local instances: { any } = {}
 
 	if typeof(setOrContainer) == "Enum" then
@@ -138,8 +216,6 @@ function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?)
 	else
 		error("[Cmdr] MakeFuzzyFinder only accepts a table, Enum, or Instance.")
 	end
-
-	assert(names, "") --< Luau Language Server type fix
 
 	-- Searches the set (checking exact matches first)
 	return function(text: string, returnFirst: boolean?, matchStart: boolean?)
@@ -192,7 +268,7 @@ function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?)
 
 		return results
 	end
-end
+end--]]
 
 --[=[
 	@within Util
@@ -267,7 +343,7 @@ end
 	@within Util
 	Splits a string by space but taking into account quoted sequences which will be treated as a single argument.
 ]=]
-function Util.SplitString(text: string, max: number): { string }
+function Util.SplitString(text: string, max: number?): { string }
 	text = encodeControlChars(text)
 	max = max or math.huge
 
@@ -592,16 +668,13 @@ function Util.MakeSequenceType(options: {
 		return true
 	end
 
-	assert(options.TransformEach, "") --< Luau Language Server type fix
-	assert(options.ValidateEach, "") --< Luau Language Server type fix
-
 	return {
 		Prefixes = options.Prefixes,
 
 		Transform = options.Transform or function(text: string)
 			const elements = Util.SplitPrioritizedDelimeter(text, { ",", "%s" })
 			return Util.Map(elements, function(value: string)
-				return options.TransformEach(value)
+				return (options :: any).TransformEach(value)
 			end)
 		end,
 
@@ -611,7 +684,7 @@ function Util.MakeSequenceType(options: {
 			end
 
 			for componentIndex = 1, options.Length or #components do
-				const valid, reason = options.ValidateEach(components[componentIndex], componentIndex)
+				const valid, reason = (options :: any).ValidateEach(components[componentIndex], componentIndex)
 				if not valid then
 					return false, reason
 				end

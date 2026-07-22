@@ -1,18 +1,21 @@
 const VALID_TEXT_COLOR = Color3.fromRGB(255, 255, 255)
 const INVALID_TEXT_COLOR = Color3.fromRGB(255, 73, 73)
 
+--[=[
+	@class AutoComplete
+	@ignore
+	Handles the Cmdr suggestions interface.
+]=]
+
 return function(CmdrClient)
 	const autoCompleteFrame = CmdrClient.Gui:WaitForChild("Autocomplete") :: ScrollingFrame
-	const defaultBarThickness = CmdrClient.self._guiScrollbarThickness :: number
+	const defaultBarThickness = autoCompleteFrame.ScrollBarThickness
 
 	const AutoComplete = {
-		_gui = autoCompleteFrame,
 		_autoItem = autoCompleteFrame:WaitForChild("TextButton") :: TextButton,
 		_title = autoCompleteFrame:WaitForChild("Title") :: TextLabel,
 		_description = autoCompleteFrame:WaitForChild("Description") :: TextLabel,
-		_entry = CmdrClient.Gui:WaitForChild("Entry") :: Frame,
-
-		_guiScrollBarThickness = nil :: number?,
+		_entry = CmdrClient.Gui.Frame:WaitForChild("Entry") :: Frame,
 
 		Items = {},
 		SelectedItem = 1,
@@ -26,8 +29,15 @@ return function(CmdrClient)
 		IsPartial = false,
 	}
 
+	const function updateContainerSize()
+		autoCompleteFrame.Size = UDim2.fromOffset(
+			math.max(AutoComplete._title.Field.TextBounds.X + AutoComplete._title.Field.Type.TextBounds.X, autoCompleteFrame.Size.X.Offset),
+			math.min(autoCompleteFrame.UIListLayout.AbsoluteContentSize.Y, autoCompleteFrame.Parent.AbsoluteSize.Y - autoCompleteFrame.AbsolutePosition.Y - 10)
+		)
+	end
+
 	--[=[
-		@within Window
+		@within AutoComplete
 		@private
 
 		Sets the text of the provided object.
@@ -42,25 +52,12 @@ return function(CmdrClient)
 	end
 
 	--[=[
-		@within Window
-		@private
-
-		Updates the size of the AutoComplete frame.
-	]=]
-	function AutoComplete:_updateContainerSize()
-		self._self._guiSize = UDim2.fromOffset(
-			math.max(self._title.Field.TextBounds.X + self._title.Field.Type.TextBounds.X, self._self._guiSize.X.Offset),
-			math.min(self._self._guiUIListLayout.AbsoluteContentSize.Y, self._self._guiParent.AbsoluteSize.Y - self._self._guiAbsolutePosition.Y - 10)
-		)
-	end
-
-	--[=[
-		@within Window
+		@within AutoComplete
 		@private
 
 		Updates the displayed auto completion info.
 	]=]
-	function AutoComplete:_updateInfoDisplay(options)
+	function AutoComplete:_updateInfoDisplay(options: any)
 		self:_setText(self._title, self._title.Field, options.name, true)
 		self:_setText(self._title.Field.Type, self._title.Field.Type, options.type and ": " .. options.type:sub(1, 1):upper() .. options.type:sub(2))
 		self:_setText(self._description, self._description.Label, options.description)
@@ -77,16 +74,16 @@ return function(CmdrClient)
 		end
 
 		task.wait()
-		self._self._guiUIListLayout:ApplyLayout()
-		self:_updateContainerSize()
-		self._self._guiScrollBarThickness = defaultBarThickness
+		autoCompleteFrame.UIListLayout:ApplyLayout()
+		updateContainerSize()
+		autoCompleteFrame.ScrollBarThickness = defaultBarThickness
 	end
 
 	--[=[
 		@within AutoComplete
 		Shows the autocomplete menu.
 	]=]
-	function AutoComplete:Show(items, options)
+	function AutoComplete:Show(items: any, options: any)
 		options = options or {}
 
 		for _, item in ipairs(self.Items) do
@@ -107,7 +104,7 @@ return function(CmdrClient)
 		self.IsPartial = options.isPartial
 
 		local autocompleteWidth = 200
-		self._guiScrollBarThickness = 0
+		autoCompleteFrame.ScrollBarThickness = 0
 
 		for index, item in ipairs(items) do
 			const typedText = item[1]
@@ -135,7 +132,7 @@ return function(CmdrClient)
 			item.gui = button
 		end
 
-		self._guiUIListLayout:ApplyLayout()
+		autoCompleteFrame.UIListLayout:ApplyLayout()
 
 		const text = self._entry.TextBox.Text
 		local words = CmdrClient.Util.SplitString(text)
@@ -146,9 +143,9 @@ return function(CmdrClient)
 		table.remove(words, #words)
 
 		local offset = (options.at or (#table.concat(words, " ") + 1)) * 7
-		self._guiPosition = UDim2.fromOffset(self._entry.TextBox.AbsolutePosition.X - 10 + offset, self._entry.TextBox.AbsolutePosition.Y + 30)
-		self._guiSize = UDim2.fromOffset(autocompleteWidth, self._guiUIListLayout.AbsoluteContentSize.Y)
-		self._guiVisible = true
+		autoCompleteFrame.Position = UDim2.fromOffset(self._entry.TextBox.AbsolutePosition.X - 10 + offset, self._entry.TextBox.AbsolutePosition.Y + 30)
+		autoCompleteFrame.Size = UDim2.fromOffset(autocompleteWidth, autoCompleteFrame.UIListLayout.AbsoluteContentSize.Y)
+		autoCompleteFrame.Visible = true
 		self:_updateInfoDisplay(self.Items[1] and self.Items[1].options or options)
 	end
 
@@ -157,7 +154,7 @@ return function(CmdrClient)
 		Returns the selected autocomplete item.
 	]=]
 	function AutoComplete:GetSelectedItem()
-		if not self._gui.Visible then
+		if not autoCompleteFrame.Visible then
 			return nil
 		end
 
@@ -169,7 +166,7 @@ return function(CmdrClient)
 		Hides the autocomplete menu.
 	]=]
 	function AutoComplete:Hide()
-		self._gui.Visible = false
+		autoCompleteFrame.Visible = false
 	end
 
 	--[=[
@@ -177,15 +174,15 @@ return function(CmdrClient)
 		Returns whether autocomplete is visible.
 	]=]
 	function AutoComplete:IsVisible()
-		return self._gui.Visible
+		return autoCompleteFrame.Visible
 	end
 
 	--[=[
 		@within AutoComplete
 		Changes the current selection.
 	]=]
-	function AutoComplete:Select(delta)
-		if not self._gui.Visible then
+	function AutoComplete:Select(delta: number)
+		if not autoCompleteFrame.Visible then
 			return
 		end
 
@@ -201,7 +198,8 @@ return function(CmdrClient)
 			item.gui.BackgroundTransparency = if index == self.SelectedItem then 0.5 else 1
 		end
 
-		self._gui.CanvasPosition = Vector2.new(0, math.max(0, self._title.Size.Y.Offset + self._description.Size.Y.Offset + self.SelectedItem * self._autoItem.Size.Y.Offset - self._gui.Size.Y.Offset))
+		autoCompleteFrame.CanvasPosition =
+			Vector2.new(0, math.max(0, self._title.Size.Y.Offset + self._description.Size.Y.Offset + self.SelectedItem * self._autoItem.Size.Y.Offset - autoCompleteFrame.Size.Y.Offset))
 
 		const selectedItem = self.Items[self.SelectedItem]
 		if selectedItem and selectedItem.options then
@@ -210,7 +208,7 @@ return function(CmdrClient)
 	end
 
 	AutoComplete._autoItem.Parent = nil
-	AutoComplete._gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(AutoComplete._updateContainerSize(AutoComplete))
+	autoCompleteFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateContainerSize)
 
 	return AutoComplete
 end

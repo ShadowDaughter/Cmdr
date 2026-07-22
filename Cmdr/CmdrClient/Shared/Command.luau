@@ -202,7 +202,6 @@ end
 ]=]
 function Command:Parse(allowIncompleteArguments: boolean?): (boolean, string?)
 	local hadOptional = false
-
 	for index, definition in ipairs(self.ArgumentDefinitions) do
 		if type(definition) == "function" then
 			definition = definition(self)
@@ -213,10 +212,9 @@ function Command:Parse(allowIncompleteArguments: boolean?): (boolean, string?)
 		end
 
 		const required = definition.Default == nil and definition.Optional ~= true
+		assert(not (required and hadOptional), `[Cmdr] Command {self.Name} has required arguments after optional arguments.`)
 
-		if required and hadOptional then
-			error(`[Cmdr] Command {self.Name} has required arguments after optional arguments.`)
-		elseif not required then
+		if not required then
 			hadOptional = true
 		end
 
@@ -243,7 +241,6 @@ function Command:Validate(isFinal: boolean?): (boolean, string)
 
 	local errorText = ""
 	local success = true
-
 	for index, argument in pairs(self.Arguments) do
 		const valid, message = argument:Validate(isFinal)
 
@@ -263,7 +260,6 @@ end
 function Command:GetLastArgument()
 	for index = #self.Arguments, 1, -1 do
 		const argument = self.Arguments[index]
-
 		if argument and argument.RawValue then
 			return argument
 		end
@@ -297,9 +293,7 @@ end
 	Runs the command.
 ]=]
 function Command:Run(): string?
-	if not self._Validated then
-		error("[Cmdr] Must validate a command before running.")
-	end
+	assert(self._Validated, "[Cmdr] Must validate a command before running.")
 
 	const beforeRunHook = self.Dispatcher:RunHooks("BeforeRun", self)
 	if beforeRunHook then
@@ -396,10 +390,7 @@ end
 	Broadcasts an event to all clients.
 ]=]
 function Command:BroadcastEvent(event: string, ...: any)
-	if not IS_SERVER then
-		error("[Cmdr] Can't broadcast event messages from the client.", 2)
-	end
-
+	assert(IS_SERVER, "[Cmdr] Can't broadcast event messages from the client.")
 	self.Cmdr._remoteEvent:FireAllClients(event, ...)
 end
 

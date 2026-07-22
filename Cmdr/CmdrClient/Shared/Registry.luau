@@ -180,23 +180,14 @@ const Registry = {
 	Registers a type on the current realm (server/client), this function should be called from within the type definition ModuleScript.
 ]=]
 function Registry:RegisterType(name: string, typeObject)
-	if not name or typeof(name) ~= "string" then
-		error("[Cmdr] Invalid type name provided: nil")
-	end
-
-	if not name:find("^[%d%l]%w*$") then
-		error(`[Cmdr] Invalid type name provided: "{name}", type names must be alphanumeric and start with a lowercase letter or digit.`)
-	end
+	assert(typeof(name) == "string", `[Cmdr] Invalid type name provided: {tostring(name)}`)
+	assert(name:find("^[%d%l]%w*$") ~= nil, `[Cmdr] Invalid type name provided: "{name}", type names must be alphanumeric and start with a lowercase letter or digit.`)
 
 	for key in pairs(typeObject) do
-		if TypeMethods[key] == nil then
-			error(`[Cmdr] Unknown key/method in type "{name}": {key}`)
-		end
+		assert(TypeMethods[key] ~= nil, `[Cmdr] Unknown key/method in type "{name}": {key}`)
 	end
 
-	if self._types[name] ~= nil then
-		error(`[Cmdr] Type "{name}" has already been registered.`)
-	end
+	assert(self._types[name] == nil, `[Cmdr] Type "{name}" has already been registered.`)
 
 	typeObject.Name = name
 	typeObject.DisplayName = typeObject.DisplayName or name
@@ -287,9 +278,7 @@ function Registry:_validateCommandArguments(commandObject)
 		end
 
 		for key in pairs(argument) do
-			if not CommandArgProps[key] then
-				error(`[Cmdr] Unknown property in command "{commandObject.Name or "unknown"}" argument #{index}: {key}`)
-			end
+			assert(CommandArgProps[key], `[Cmdr] Unknown property in command "{commandObject.Name or "unknown"}" argument #{index}: {key}`)
 		end
 	end
 end
@@ -305,9 +294,7 @@ end
 ]=]
 function Registry:_validateCommand(commandObject)
 	for key in pairs(commandObject) do
-		if not CommandMethods[key] then
-			error(`[Cmdr] Unknown key/method in command "{commandObject.Name or "unknown command"}": {key}`)
-		end
+		assert(CommandMethods[key], `[Cmdr] Unknown key/method in command "{commandObject.Name or "unknown command"}": {key}`)
 	end
 
 	if commandObject.Args then
@@ -326,17 +313,17 @@ end
 	Prefer using Registry:RegisterCommand for proper handling of client/server model.
 ]=]
 function Registry:RegisterCommandObject(commandObject, isDefault: boolean?): boolean
-	self:__validateCommand(commandObject) -- Error if the command object isn't valid
+	self:_validateCommand(commandObject) -- Error if the command object isn't valid
 
 	if commandObject.AutoExec and IS_CLIENT then
-		table.insert(self._AutoExecBuffer, commandObject.AutoExec)
+		table.insert(self._autoExecBuffer, commandObject.AutoExec)
 		self:_flushAutoExecBufferDeferred()
 	end
 
 	commandObject._isDefault = isDefault == true
 
 	const commandName = commandObject.Name:lower()
-	const existingCommand = self._Commands[commandName]
+	const existingCommand = self._commands[commandName]
 	if existingCommand then
 		const existingIsDefault = existingCommand._isDefault
 
@@ -386,7 +373,6 @@ end
 
 --[=[
 	@within Registry
-	@server
 
 	@param filter ((CommandDefinition) -> boolean)? -- If present, will be passed a command definition which will then only be registered if the function returns `true`.
 
@@ -394,13 +380,11 @@ end
 	Handles replicating the definition to the client.
 ]=]
 function Registry:RegisterCommand(commandScript: ModuleScript, commandServerScript: ModuleScript?, filter: ((any) -> boolean)?, isDefault: boolean?)
-	assert(RunService:IsServer(), "[Cmdr] RegisterCommand cannot be called from the client.")
-
 	local commandObject = require(commandScript)
 	assert(typeof(commandObject) == "table", `[Cmdr] Invalid return value from command script "{commandScript.Name}" (CommandDefinition expected, got {typeof(commandObject)})`)
 
 	if commandServerScript then
-		assert(RunService:IsServer(), "[Cmdr] The commandServerScript parameter is not valid for client usage.")
+		assert(IS_SERVER, "[Cmdr] The commandServerScript parameter is not valid for client usage.")
 		commandObject.Run = require(commandServerScript)
 	end
 
@@ -418,7 +402,6 @@ end
 
 --[=[
 	@within Registry
-	@server
 
 	@param filter ((CommandDefinition) -> boolean)? -- If present, will be passed a command definition which will then only be registered if the function returns `true`.
 
@@ -426,16 +409,14 @@ end
 	Module scripts which include `Server` in their name will not be sent to the client.
 ]=]
 function Registry:RegisterCommandsIn(container: Instance, filter: ((any) -> boolean)?, isDefault: boolean?)
-	assert(RunService:IsServer(), "[Cmdr] RegisterCommandsIn cannot be called from the client.")
+	--assert(IS_SERVER, "[Cmdr] RegisterCommandsIn cannot be called from the client.")
 
 	local skippedServerScripts = {}
 	local usedServerScripts = {}
-
 	for _, commandScript in pairs(container:GetChildren()) do
 		if commandScript:IsA("ModuleScript") then
 			if not commandScript.Name:find("Server") then
-				local serverCommandScript = container:FindFirstChild(commandScript.Name .. "Server")
-
+				const serverCommandScript = container:FindFirstChild(commandScript.Name .. "Server")
 				if serverCommandScript then
 					usedServerScripts[serverCommandScript] = true
 				end
@@ -472,10 +453,11 @@ end
 	If a custom developer command is registered with the same name or alias as a default command, the developer command will take precedence and replace the default built-in command.
 ]=]
 function Registry:RegisterDefaultCommands(arrayOrFunc: { string } | (any) -> boolean | nil)
-	assert(RunService:IsServer(), "[Cmdr] RegisterDefaultCommands cannot be called from the client.")
+	assert(IS_SERVER, "[Cmdr] RegisterDefaultCommands cannot be called from the client.")
 
 	const dictionary = if type(arrayOrFunc) == "table" then Util.MakeDictionary(arrayOrFunc) else nil
 	local filter
+
 	if dictionary ~= nil then
 		function filter(command)
 			return dictionary[command.Group] or false
@@ -574,9 +556,7 @@ end
 	Hooks run in order of priority from lowest (running first) to highest.
 ]=]
 function Registry:RegisterHook(hookName: string, callback: (any) -> string?, priority: number)
-	if not self._hooks[hookName] then
-		error(("[Cmdr] Invalid hook name: %q"):format(hookName), 2)
-	end
+	assert(self._hooks[hookName], `[Cmdr] Invalid hook name: {hookName}`)
 
 	table.insert(self._hooks[hookName], { callback = callback, priority = priority or 0 })
 	table.sort(self._hooks[hookName], function(a, b)
@@ -600,7 +580,7 @@ Util:_registerDeprecationWarning("AddHook", "This method was renamed to Register
 	This is the same as CommandContext.GetStore.
 ]=]
 function Registry:GetStore(name: string)
-	return self.Stores[name]
+	return self._stores[name]
 end
 
 --[=[
@@ -610,7 +590,7 @@ end
 	Runs all pending auto exec commands in Registry.AutoExecBuffer.
 ]=]
 function Registry:_flushAutoExecBuffer()
-	for _, commandGroup in ipairs(self.AutoExecBuffer) do
+	for _, commandGroup in ipairs(self._autoExecBuffer) do
 		for _, command in ipairs(commandGroup) do
 			self.Cmdr.Dispatcher:EvaluateAndRun(command)
 		end
@@ -644,7 +624,7 @@ export type Registry = typeof(setmetatable(Registry, Registry))
 
 return function(Cmdr): Registry
 	const ProtectedRegistry = { Cmdr = Cmdr }
-	return table.freeze(setmetatable(ProtectedRegistry, {
+	return setmetatable(ProtectedRegistry, {
 		__index = function(_, key)
 			if Util._deprecationWarnings[key] then
 				Util:_emitDeprecationWarning(key)
@@ -652,5 +632,5 @@ return function(Cmdr): Registry
 
 			return Registry[key]
 		end,
-	})) :: Registry
+	}) :: Registry
 end

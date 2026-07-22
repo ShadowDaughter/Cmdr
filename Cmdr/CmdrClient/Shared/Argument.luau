@@ -143,13 +143,12 @@ function Argument.new(command, argumentDefinition, value)
 		self.Type = argumentDefinition.Type
 	else
 		const parsedType, parsedRawValue, prefix = Util.ParsePrefixedUnionType(command.Cmdr.Registry:GetTypeName(argumentDefinition.Type), value)
-		self.Type = command.Dispatcher.Registry:GetType(parsedType)
+		const existingType = command.Dispatcher.Registry:GetType(parsedType)
+		assert(existingType, `[Cmdr] Argument "{self.Name or "none"}" has an unregistered type {parsedType or "<none>"}`)
+
+		self.Type = existingType
 		self.RawValue = parsedRawValue
 		self.Prefix = prefix
-
-		if not self.Type then
-			error(`[Cmdr] {self.Name or "none"} has an unregistered type {parsedType or "<none>"}`)
-		end
 	end
 
 	setmetatable(self, Argument)
@@ -376,9 +375,7 @@ function Argument:GetValue(): any
 	local values = {}
 	for index = 1, #self.TransformedValues do
 		const parsedValue = self:_parseValue(index)
-		if type(parsedValue) ~= "table" then
-			error(`[Cmdr] Listable types must return a table from Parse {self.Type.Name}`)
-		end
+		assert(type(parsedValue) == "table", `[Cmdr] Listable types must return a table from Parse {self.Type.Name}`)
 
 		for _, value in pairs(parsedValue) do
 			values[value] = true

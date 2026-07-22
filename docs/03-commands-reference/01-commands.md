@@ -36,19 +36,19 @@ The implementation — whether on the server or client — is passed the [Comman
 ```lua title="TeleportServer.luau"
 -- These arguments are guaranteed to exist and be correctly typed.
 return function (context, fromPlayers, toPlayer)
-  if toPlayer.Character and toPlayer:FindFirstChild("HumanoidRootPart") then
-    local position = toPlayer.Character.HumanoidRootPart.CFrame
+	if toPlayer.Character and toPlayer:FindFirstChild("HumanoidRootPart") then
+		local position = toPlayer.Character.HumanoidRootPart.CFrame
 
-    for _, player in ipairs(fromPlayers) do
-      if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        player.Character.HumanoidRootPart.CFrame = position
-      end
-    end
+		for _, player in ipairs(fromPlayers) do
+			if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+				player.Character.HumanoidRootPart.CFrame = position
+			end
+		end
 
-    return "Teleported players."
-  end
+		return "Teleported players."
+	end
 
-  return "Target player has no character."
+	return "Target player has no character."
 end
 ```
 
@@ -204,6 +204,7 @@ return {
 				Description = "Add or remove",
 			}
 		end,
+
 		-- This is an example of a dynamic argument
 		function(context)
 			local action = context:GetArgument(1):GetValue()

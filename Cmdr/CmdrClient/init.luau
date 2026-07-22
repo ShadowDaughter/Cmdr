@@ -1,8 +1,5 @@
 const RunService = game:GetService("RunService")
-
-if not RunService:IsClient() then
-	error("[Cmdr] The Cmdr client library cannot be required by the server. Please require the server libary instead.")
-end
+assert(RunService:IsClient(), "[Cmdr] The Cmdr client library cannot be required by the server. Please require the server libary instead.")
 
 const Registry = require("@self/Shared/Registry")
 const Dispatcher = require("@self/Shared/Dispatcher")
@@ -12,7 +9,7 @@ const CmdrInterface = require("@self/CmdrInterface")
 const DefaultEventHandlers = require("@self/DefaultEventHandlers")
 
 const TYPES_FOLDER = script:WaitForChild("Types") :: Folder
-const COMMANDS_FOLDER = script:WaitForChild("Commands") :: Folder
+local COMMANDS_FOLDER = script:WaitForChild("Commands") :: Folder
 
 type Signal = {
 	Fire: (self: Signal, ...any) -> (),
@@ -96,6 +93,16 @@ end
 ]=]
 
 --[=[
+	@within Cmdr
+	@readonly
+	@private
+
+	@prop _replicatedRoot ModuleScript
+	
+	Refers to the CmdrClient modulescript containing all shared functionality.
+]=]
+
+--[=[
 	@within CmdrClient
 	@readonly
 	@private
@@ -168,8 +175,9 @@ end
 --[=[
 	@within CmdrClient
 	@readonly
+	@private
 
-	@prop PlaceName string
+	@prop _placeName string
 
 	The current place name, displayed on the interface. Use [`CmdrClient:SetPlaceName`](#SetPlaceName) to change.
 ]=]
@@ -194,6 +202,7 @@ local CmdrClient = {
 
 	_interface = nil :: any,
 
+	_replicatedRoot = script,
 	_remoteEvent = script:WaitForChild("CmdrEvent") :: RemoteEvent,
 	_remoteFunction = script:WaitForChild("CmdrFunction") :: RemoteFunction,
 
@@ -203,7 +212,7 @@ local CmdrClient = {
 	_mashToOpen = false,
 	_hideOnLostFocus = true,
 
-	PlaceName = "Cmdr",
+	_placeName = "Cmdr",
 
 	_events = {} :: { [string]: (any) -> () },
 }
@@ -233,7 +242,7 @@ function CmdrClient:SetActivationUnlocksmouse(enabled: boolean)
 end
 
 --[=[
-@within CmdrClient
+	@within CmdrClient
 	Shows the Cmdr window. Does nothing if Cmdr isn't enabled.
 ]=]
 function CmdrClient:Show()
@@ -245,7 +254,7 @@ function CmdrClient:Show()
 end
 
 --[=[
-@within CmdrClient
+	within CmdrClient
 	Hides the Cmdr window.
 ]=]
 function CmdrClient:Hide()
@@ -301,7 +310,7 @@ end
 	Sets the place name label on the interface. This is useful for a quick way to tell what game you're playing in a universe game.
 ]=]
 function CmdrClient:SetPlaceName(name: string)
-	self.PlaceName = name
+	self._placeName = name
 	self._interface.Window:UpdateLabelText()
 end
 
@@ -317,9 +326,7 @@ end
 const function initialize()
 	CmdrClient.Registry = Registry(CmdrClient)
 	CmdrClient.Dispatcher = Dispatcher(CmdrClient)
-
 	CmdrClient._interface = CmdrInterface(CmdrClient)
-	CmdrClient.Gui = CmdrClient._interface.Gui
 
 	CmdrClient._remoteEvent.OnClientEvent:Connect(function(eventName: string, ...)
 		if not CmdrClient._events[eventName] then
@@ -349,14 +356,13 @@ const function initialize()
 
 		CmdrClient.Registry:RegisterCommand(child)
 	end)
-
-	DefaultEventHandlers(CmdrClient)
 end
 
 initialize()
+DefaultEventHandlers(CmdrClient)
 
 -- Export CmdrClient
-return table.freeze(setmetatable(CmdrClient, {
+return setmetatable(CmdrClient, {
 	__index = function(self, key)
 		const dispatcher = rawget(self, "Dispatcher")
 		const value = dispatcher and dispatcher[key]
@@ -374,4 +380,4 @@ return table.freeze(setmetatable(CmdrClient, {
 
 		return nil
 	end,
-}))
+})

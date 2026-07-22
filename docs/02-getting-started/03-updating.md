@@ -55,7 +55,7 @@ If you simply want to pull down the latest updates from the remote Cmdr reposito
    git submodule update --remote Cmdr
    ```
 
-   _Note: Git will default to checking out the remote's HEAD commit._
+_Note: Git will default to checking out the remote's HEAD commit._
 
 ### Synchronizing collaborators
 
@@ -73,7 +73,7 @@ If another developer on your team updated the Cmdr submodule version and committ
    git submodule update --init
    ```
 
-   _Note: Using the `--init` flag ensures that the submodule is properly initialized and fetched if it was recently added to the repository layout._
+_Note: Using the `--init` flag ensures that the submodule is properly initialized and fetched if it was recently added to the repository layout._
 
 :::tip Avoid Detached HEAD State
 

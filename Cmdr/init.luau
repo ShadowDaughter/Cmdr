@@ -1,9 +1,10 @@
 const RunService = game:GetService("RunService")
 const ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-if not RunService:IsServer() then
-	error("[Cmdr] The Cmdr server library cannot be required by the client. Please require the client libary instead.")
-end
+const IS_SERVER_CONTAINER = script:FindFirstAncestorWhichIsA("ServerScriptService") or script:FindFirstAncestorWhichIsA("ServerStorage")
+const IS_SERVER = RunService:IsServer()
+assert(IS_SERVER_CONTAINER, "[Cmdr] The Cmdr server library must be kept within a Server Container.")
+assert(IS_SERVER, "[Cmdr] The Cmdr server library cannot be required by the client. Please require the client libary instead.")
 
 const Registry = require("@self/CmdrClient/Shared/Registry")
 const Dispatcher = require("@self/CmdrClient/Shared/Dispatcher")
@@ -91,6 +92,16 @@ end
 	Refers to the BuiltInCommands folder containing all default commands.
 ]=]
 
+--[=[
+	@within Cmdr
+	@readonly
+	@private
+
+	@prop _defaultTypesFolder Folder
+
+	Refers to the BuiltInTypes folder containing all default types.
+]=]
+
 local Cmdr = {
 	Registry = nil :: Registry.Registry?,
 	Dispatcher = nil :: any,
@@ -101,6 +112,7 @@ local Cmdr = {
 
 	_replicatedRoot = nil :: ModuleScript?,
 	_defaultCommandsFolder = script.BuiltInCommands,
+	_defaultTypesFolder = script.BuiltInTypes,
 }
 
 -- Initialize Cmdr
@@ -117,19 +129,24 @@ const function initialize()
 	Cmdr._remoteEvent = createObject("RemoteEvent", "CmdrEvent", Cmdr._replicatedRoot)
 	Cmdr._remoteFunction = createObject("RemoteFunction", "CmdrFunction", Cmdr._replicatedRoot)
 
-	Cmdr._remoteFunction.OnServerInvoke = function(player: Player, text: string, options)
+	Cmdr._remoteFunction.OnServerInvoke = function(player: Player, text: string, options: any)
 		if #text > 10000 then
 			return "Input too long"
 		end
 
-		return -- TODO: Implement EvaluateAndRun
+		return Cmdr.Dispatcher:EvaluateAndRun(text, player, options)
 	end
+
+	Cmdr.Registry:RegisterTypesIn(Cmdr._defaultTypesFolder)
+
+	script.BuiltInTypes:Destroy()
+	script.BuiltInCommands.Name = "Server commands"
 end
 
 initialize()
 
 -- Export Cmdr
-return table.freeze(setmetatable(Cmdr, {
+return setmetatable(Cmdr, {
 	__index = function(self, key)
 		const registry = rawget(self, "Registry")
 		const value = registry and registry[key]
@@ -147,4 +164,4 @@ return table.freeze(setmetatable(Cmdr, {
 
 		return nil
 	end,
-}))
+})

@@ -8,7 +8,7 @@ const MOUSE_TOUCH_INPUTS = { Enum.UserInputType.MouseButton1, Enum.UserInputType
 
 const VALID_TEXT_COLOR = Color3.fromRGB(255, 255, 255)
 const INVALID_TEXT_COLOR = Color3.fromRGB(255, 73, 73)
-const PROCESSING_TEXT_COLOR = Color3.fromRGB(255, 153, 153)
+const PROCESSING_TEXT_COLOR = Color3.fromRGB(255, 223, 93)
 
 const Player = Players.LocalPlayer
 
@@ -44,13 +44,15 @@ end
 
 --[=[
 	@class Window
+	@ignore
 	Handles the Cmdr command bar interface.
 ]=]
 
 return function(CmdrClient, AutoComplete)
+	const entryFrame = CmdrClient.Gui:WaitForChild("Frame")
 	const Window = {
-		_entry = CmdrClient.Gui:WaitForChild("Entry") :: Frame,
-		_lineTemplate = CmdrClient.Gui:WaitForChild("Line") :: TextBox,
+		_entry = entryFrame:WaitForChild("Entry") :: Frame,
+		_lineTemplate = entryFrame:WaitForChild("Line") :: TextBox,
 
 		_previousChatWindowEnabled = nil :: boolean?,
 		_previousChatInputBarEnabled = nil :: boolean?,
@@ -83,7 +85,7 @@ return function(CmdrClient, AutoComplete)
 		Updates the command prompt label.
 	]=]
 	function Window:UpdateLabelText()
-		const placeName = CmdrClient.PlaceName
+		const placeName = CmdrClient._placeName
 		self._entry.TextLabel.Text = `{Player.Name}{if placeName and placeName ~= "" then `@{placeName}` else ""}$`
 	end
 
@@ -92,12 +94,12 @@ return function(CmdrClient, AutoComplete)
 		Recalculate the window height
 	]=]
 	function Window:UpdateWindowHeight()
-		const layout = CmdrClient.Gui.UIListLayout
-		const padding = CmdrClient.Gui.UIPadding
+		const layout = entryFrame.UIListLayout
+		const padding = entryFrame.UIPadding
 		const height = layout.AbsoluteContentSize.Y + padding.PaddingTop.Offset + padding.PaddingBottom.Offset
 
-		CmdrClient.Gui.Size = UDim2.new(CmdrClient.Gui.Size.X.Scale, CmdrClient.Gui.Size.X.Offset, 0, math.clamp(height, 0, WINDOW_MAX_HEIGHT))
-		CmdrClient.Gui.CanvasPosition = Vector2.new(0, height)
+		entryFrame.Size = UDim2.new(entryFrame.Size.X.Scale, entryFrame.Size.X.Offset, 0, math.clamp(height, 0, WINDOW_MAX_HEIGHT))
+		entryFrame.CanvasPosition = Vector2.new(0, height)
 	end
 
 	--[=[
@@ -131,7 +133,7 @@ return function(CmdrClient, AutoComplete)
 		@within Window
 		Adds a line to the command output.
 	]=]
-	function Window:AddLine(text: any, options)
+	function Window:AddLine(text: any, options: any)
 		options = options or {}
 		text = tostring(text)
 
@@ -148,7 +150,7 @@ return function(CmdrClient, AutoComplete)
 		line.Text = CmdrClient.Util.EmulateTabstops(text, 8)
 		line.TextColor3 = options.Color or line.TextColor3
 		line.RichText = options.RichText or false
-		line.Parent = CmdrClient.Gui
+		line.Parent = entryFrame
 	end
 
 	--[=[
@@ -204,7 +206,7 @@ return function(CmdrClient, AutoComplete)
 		Sets whether the command bar is visible.
 	]=]
 	function Window:SetVisible(visible: boolean)
-		CmdrClient.Gui.Visible = visible
+		entryFrame.Visible = visible
 
 		if visible then
 			self:_setChatEnabled(false)
@@ -230,7 +232,7 @@ return function(CmdrClient, AutoComplete)
 		Returns whether the command bar is currently visible.
 	]=]
 	function Window:IsVisible(): boolean
-		return CmdrClient.Gui.Visible
+		return entryFrame.Visible
 	end
 
 	--[=[
@@ -304,7 +306,7 @@ return function(CmdrClient, AutoComplete)
 
 		Handles vertical directional navigation.
 	]=]
-	function Window:_selectVertical(delta)
+	function Window:_selectVertical(delta: number)
 		if AutoComplete:IsVisible() and not self._historyState then
 			AutoComplete:Select(delta)
 		else
@@ -318,7 +320,7 @@ return function(CmdrClient, AutoComplete)
 
 		Trims the input command text.
 	]=]
-	function Window._processEntry(text)
+	function Window._processEntry(text: string)
 		text = CmdrClient.Util.TrimString(text)
 
 		if #text == 0 then
@@ -335,7 +337,7 @@ return function(CmdrClient, AutoComplete)
 
 		Handles user input when the box is focused.
 	]=]
-	function Window:_loseFocus(submit)
+	function Window:_loseFocus(submit: boolean)
 		if self._hasLostFocus then
 			return
 		end
@@ -459,7 +461,8 @@ return function(CmdrClient, AutoComplete)
 		end
 
 		-- Check for activation shortcut keys
-		if CmdrClient._activationKeys[input.KeyCode] then
+		--if CmdrClient._activationKeys[input.KeyCode] then
+		if table.find(CmdrClient._activationKeys, input.KeyCode) then
 			self:_handleActivationKey()
 			return
 		end
@@ -479,7 +482,7 @@ return function(CmdrClient, AutoComplete)
 
 		-- Check for mouse clicks outside window boundaries
 		if CmdrClient._hideOnLostFocus and table.find(MOUSE_TOUCH_INPUTS, input.UserInputType) then
-			if isPositionOutsideGui(input.Position, CmdrClient.Gui) then
+			if isPositionOutsideGui(input.Position, entryFrame) then
 				self:Hide()
 			end
 			return
@@ -496,7 +499,7 @@ return function(CmdrClient, AutoComplete)
 		elseif input.KeyCode == Enum.KeyCode.Tab then
 			self:_handleTabCompletion()
 		else
-			self:ClearHistoryState()
+			self:_clearHistoryState()
 		end
 	end
 
@@ -506,7 +509,7 @@ return function(CmdrClient, AutoComplete)
 
 		Processes autocomplete for command arguments once a command name is active.
 	]=]
-	function Window._handleArgumentAutoComplete(command, arguments: { string }, text: string, hasTrailingSpace: boolean, atEnd: boolean)
+	function Window._handleArgumentAutoComplete(command: any, arguments: { string }, text: string, hasTrailingSpace: boolean, atEnd: boolean)
 		const commandValid, commandError = command:Validate()
 		Window:_setIsValidInput(commandValid, ("Validation errors: %s"):format(commandError or ""))
 
@@ -565,7 +568,7 @@ return function(CmdrClient, AutoComplete)
 
 		Processes autocomplete for initial command name lookup.
 	]=]
-	function Window._handleCommandAutoComplete(commandText: string, command)
+	function Window._handleCommandAutoComplete(commandText: string, command: any)
 		Window:_setIsValidInput(true)
 
 		local exactCommand = CmdrClient.Registry:GetCommand(commandText)
@@ -624,6 +627,10 @@ return function(CmdrClient, AutoComplete)
 		Fired whenever the command input text changes. Validates inputs and updates the autocomplete view.
 	]=]
 	function Window._onTextChanged(text: string)
+		--[[if typeof(text) ~= "string" or CmdrClient.Util.TrimString(text) == "" then
+			return
+		end--]]
+
 		const command = CmdrClient.Dispatcher:Evaluate(text, Player, true)
 		local arguments = CmdrClient.Util.SplitString(text)
 		const commandText = table.remove(arguments, 1)
@@ -643,41 +650,43 @@ return function(CmdrClient, AutoComplete)
 		end
 
 		if command and entryComplete then
-			return Window._handleArgumentAutoComplete(command, arguments, text, hasTrailingSpace, atEnd)
+			Window._handleArgumentAutoComplete(command, arguments, text, hasTrailingSpace, atEnd)
+			return
 		end
 
 		if commandText and #arguments == 0 then
-			return Window._handleCommandAutoComplete(commandText, command)
+			Window._handleCommandAutoComplete(commandText, command)
+			return
 		end
 
 		Window:_setIsValidInput(false, "Use the help command to see all available commands.")
 		AutoComplete:Hide()
-
-		return nil
 	end
 
-	Window._entry.TextBox.FocusLost:Connect(function(submit)
+	Window._entry.TextBox.FocusLost:Connect(function(submit: boolean)
 		Window:_loseFocus(submit)
 	end)
 
-	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	UserInputService.InputBegan:Connect(function(input: InputObject, gameProcessed: boolean)
 		Window:_beginInput(input, gameProcessed)
 	end)
 
 	Window._entry.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
-		CmdrClient.Gui.CanvasPosition = Vector2.new(0, CmdrClient.Gui.AbsoluteCanvasSize.Y)
+		entryFrame.CanvasPosition = Vector2.new(0, entryFrame.AbsoluteCanvasSize.Y)
 
 		if Window._entry.TextBox.Text:match("\t") then
 			Window._entry.TextBox.Text = Window._entry.TextBox.Text:gsub("\t", "")
 			return
 		end
 
-		Window._entry._onTextChanged(Window._entry.TextBox.Text)
+		Window._onTextChanged(Window._entry.TextBox.Text)
 	end)
 
-	CmdrClient.Gui.ChildAdded:Connect(function()
+	entryFrame.ChildAdded:Connect(function()
 		task.defer(Window.UpdateWindowHeight, Window)
 	end)
+
+	Window._lineTemplate.Parent = script
 
 	return Window
 end
