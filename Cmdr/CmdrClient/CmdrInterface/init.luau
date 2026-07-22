@@ -6,6 +6,9 @@ return function(CmdrClient)
 	const AutoComplete = AutoCompleteModule(CmdrClient)
 	const Window = WindowModule(CmdrClient, AutoComplete)
 
+	Window:UpdateLabelText()
+	Window:UpdateWindowHeight()
+
 	return {
 		Window = Window,
 		AutoComplete = AutoComplete,

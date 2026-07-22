@@ -49,8 +49,8 @@ end
 
 return function(CmdrClient, AutoComplete)
 	const Window = {
-		_entry = CmdrClient.Gui:WaitForChild("Entry"),
-		_lineTemplate = CmdrClient.Gui:WaitForChild("Line"),
+		_entry = CmdrClient.Gui:WaitForChild("Entry") :: Frame,
+		_lineTemplate = CmdrClient.Gui:WaitForChild("Line") :: TextBox,
 
 		_previousChatWindowEnabled = nil :: boolean?,
 		_previousChatInputBarEnabled = nil :: boolean?,
