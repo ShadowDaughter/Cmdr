@@ -139,7 +139,7 @@ function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?)
 		error("[Cmdr] MakeFuzzyFinder only accepts a table, Enum, or Instance.")
 	end
 
-	assert(names) --< Luau Language Server type fix
+	assert(names, "") --< Luau Language Server type fix
 
 	-- Searches the set (checking exact matches first)
 	return function(text: string, returnFirst: boolean?, matchStart: boolean?)
@@ -244,8 +244,8 @@ function Util.EncodeEscapedOperator(text: string, operator: string): string
 	const escapedOp = operator:gsub("(.)", "%%%1")
 	const escapedFirst = "%" .. first
 
-	return text:gsub("(" .. escapedFirst .. "+)(" .. escapedOp .. ")", function(esc, operator)
-		return (esc:sub(1, #esc - 1) .. operator):gsub(".", function(char)
+	return text:gsub("(" .. escapedFirst .. "+)(" .. escapedOp .. ")", function(esc, op)
+		return (esc:sub(1, #esc - 1) .. op):gsub(".", function(char)
 			return "\\u" .. string.format("%04x", string.byte(char))
 		end)
 	end)
@@ -592,8 +592,8 @@ function Util.MakeSequenceType(options: {
 		return true
 	end
 
-	assert(options.TransformEach) --< Luau Language Server type fix
-	assert(options.ValidateEach) --< Luau Language Server type fix
+	assert(options.TransformEach, "") --< Luau Language Server type fix
+	assert(options.ValidateEach, "") --< Luau Language Server type fix
 
 	return {
 		Prefixes = options.Prefixes,

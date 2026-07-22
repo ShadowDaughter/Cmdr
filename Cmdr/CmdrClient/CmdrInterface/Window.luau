@@ -22,22 +22,18 @@ end
 -- Constructs auto-completed text string from command argument definitions
 local function buildAutoCompleteText(command, lastArg, replace: string): string
 	local newText = command.Alias
-
 	for _, argument in command.Arguments do
 		local segments = argument.RawSegments
-
 		if argument == lastArg then
 			segments[#segments] = replace
 		end
 
 		local argumentText = argument.Prefix .. table.concat(segments, ",")
-
 		if argumentText:find(" ") or argumentText == "" then
 			argumentText = ("%q"):format(argumentText)
 		end
 
 		newText = ("%s %s"):format(newText, argumentText)
-
 		if argument == lastArg then
 			break
 		end
@@ -576,6 +572,7 @@ return function(CmdrClient, AutoComplete)
 		local exactMatch
 
 		if exactCommand then
+			-- selene: allow(mixed_table)
 			exactMatch = {
 				exactCommand.Name,
 				exactCommand.Name,
@@ -604,6 +601,7 @@ return function(CmdrClient, AutoComplete)
 				if not exactMatch or exactMatch[1] ~= commandName then
 					local commandObject = CmdrClient.Registry:GetCommand(commandName)
 
+					-- selene: allow(mixed_table)
 					autocompleteItems[#autocompleteItems + 1] = {
 						commandText,
 						commandName,
@@ -677,7 +675,7 @@ return function(CmdrClient, AutoComplete)
 		Window._entry._onTextChanged(Window._entry.TextBox.Text)
 	end)
 
-	CmdrClient.Gui.ChildAdded:Connect(function(child: Instance)
+	CmdrClient.Gui.ChildAdded:Connect(function()
 		task.defer(Window.UpdateWindowHeight, Window)
 	end)
 
