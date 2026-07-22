@@ -12,7 +12,11 @@ return {
 		},
 	},
 
+<<<<<<< HEAD
 	ClientRun = function(context: any, extra: number): string
+=======
+	ClientRun = function(context, extra: number): string
+>>>>>>> 73c350f (refactor: finalize Dispatcher.luau, commands and types)
 		-- We implement this here because player position is owned by the client.
 		-- No reason to bother the server for this!
 
