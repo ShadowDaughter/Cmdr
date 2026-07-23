@@ -1,4 +1,4 @@
-const VERSION = "v1.13.0"
+const VERSION = "v1.13.0-rc.1"
 
 return {
 	Name = "version",
