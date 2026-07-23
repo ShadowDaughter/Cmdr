@@ -627,10 +627,6 @@ return function(CmdrClient, AutoComplete)
 		Fired whenever the command input text changes. Validates inputs and updates the autocomplete view.
 	]=]
 	function Window._onTextChanged(text: string)
-		--[[if typeof(text) ~= "string" or CmdrClient.Util.TrimString(text) == "" then
-			return
-		end--]]
-
 		const command = CmdrClient.Dispatcher:Evaluate(text, Player, true)
 		local arguments = CmdrClient.Util.SplitString(text)
 		const commandText = table.remove(arguments, 1)
