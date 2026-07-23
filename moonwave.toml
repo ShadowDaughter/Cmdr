@@ -25,9 +25,6 @@ titleDelimiter = "•"
 url = "https://eryn.io"
 baseUrl = "/Cmdr/"
 
-# TODO: Remove when releasing new website
-noIndex = true
-
 [home]
 enabled = true
 includeReadme = false
