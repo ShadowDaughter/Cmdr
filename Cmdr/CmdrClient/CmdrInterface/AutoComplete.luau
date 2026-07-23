@@ -110,7 +110,6 @@ return function(CmdrClient)
 			const typedText = item[1]
 			const suggestionText = item[2]
 			const button = self._autoItem:Clone()
-
 			button.Name = typedText .. suggestionText
 			button.BackgroundTransparency = if index == self.SelectedItem then 0.5 else 1
 
@@ -121,7 +120,6 @@ return function(CmdrClient)
 			end
 
 			button.Typed.Text = string.rep(" ", start - 1) .. typedText
-
 			button.Suggest.Text = suggestionText:sub(1, start - 1) .. string.rep(" ", #typedText) .. suggestionText:sub(stop + 1)
 
 			button.LayoutOrder = index
@@ -147,6 +145,7 @@ return function(CmdrClient)
 		autoCompleteFrame.Position = UDim2.fromOffset(self._entry.TextBox.AbsolutePosition.X - 10 + offset, self._entry.TextBox.AbsolutePosition.Y + 30)
 		autoCompleteFrame.Size = UDim2.fromOffset(autocompleteWidth, autoCompleteFrame.UIListLayout.AbsoluteContentSize.Y)
 		autoCompleteFrame.Visible = true
+
 		self:_updateInfoDisplay(self.Items[1] and self.Items[1].options or options)
 	end
 
