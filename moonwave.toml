@@ -23,7 +23,7 @@ tagline = "The extensible command console for Roblox developers"
 titleDelimiter = "•"
 
 url = "https://eryn.io"
-baseUrl = "/Cmdr/beta/"
+baseUrl = "/Cmdr/"
 
 # TODO: Remove when releasing new website
 noIndex = true

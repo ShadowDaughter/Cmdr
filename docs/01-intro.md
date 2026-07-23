@@ -4,8 +4,8 @@ sidebar_position: -1
 
 # Introduction
 
-:::info Beta
-This website is a new service and [your feedback](https://github.com/evaera/Cmdr/issues/new?assignees=&labels=scope%3Aixp&projects=&template=websitefeedback.md) will help improve it. In the mean time, you might want to refer to [the current documentation](https://eryn.io/Cmdr).
+:::info Feedback
+This website is a new service and [your feedback](https://github.com/evaera/Cmdr/issues/new?assignees=&labels=scope%3Aixp&projects=&template=websitefeedback.md) will help improve it.
 :::
 
 ## What is Cmdr and who is it for?
