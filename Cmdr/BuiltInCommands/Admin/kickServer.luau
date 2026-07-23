@@ -1,6 +1,6 @@
 const TextService = game:GetService("TextService")
 
-return function(context, players: { Player }, reason: string): string
+return function(context: any, players: { Player }, reason: string): string
 	if reason:match("^%s*$") then
 		reason = "No reason provided"
 	end

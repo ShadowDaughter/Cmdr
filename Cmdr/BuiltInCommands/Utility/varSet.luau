@@ -17,7 +17,7 @@ return {
 		},
 	},
 
-	ClientRun = function(context, key: any)
+	ClientRun = function(context: any, key: any)
 		context:GetStore("vars_used")[key] = true
 	end,
 }

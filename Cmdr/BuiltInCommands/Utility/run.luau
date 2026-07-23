@@ -14,7 +14,7 @@ return {
 		},
 	},
 
-	ClientRun = function(context, commandString: string): string
+	ClientRun = function(context: any, commandString: string): string
 		return context.Cmdr.Util.RunCommandString(context.Dispatcher, commandString)
 	end,
 }

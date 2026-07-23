@@ -11,7 +11,7 @@ return {
 		},
 	},
 
-	ClientRun = function(context, bind: InputObject | Player): string
+	ClientRun = function(context: any, bind: InputObject | Player): string
 		local binds = context:GetStore("CMDR_Binds")
 
 		if binds[bind] then

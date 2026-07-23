@@ -42,7 +42,7 @@ return {
 		},
 	},
 
-	ClientRun = function(context, text: string, delimeter: string): string
+	ClientRun = function(context: any, text: string, delimeter: string): string
 		lock = lock or context.Cmdr.Util.Mutex()
 
 		const unlock = lock()

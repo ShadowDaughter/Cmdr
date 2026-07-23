@@ -118,7 +118,7 @@ end)
 Any server-side command can then modify this in-memory list directly:
 
 ```lua title="commands/BanServer.luau"
-return function(context, targetPlayer)
+return function(context: any, targetPlayer)
 	local banStore = context:GetStore("BannedPlayers")
 
 	-- Only append to the list if they aren't already tracked

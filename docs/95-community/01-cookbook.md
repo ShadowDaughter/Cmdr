@@ -74,7 +74,7 @@ local function filterText(text, fromUserId)
 	return broadcastSuccess and filteredString
 end
 
-return function(context, targets, title, message, duration)
+return function(context: any, targets, title, message, duration)
 	local authorUserId = context.Executor.UserId
 
 	-- Filter title and message before sending to target players

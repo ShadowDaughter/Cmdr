@@ -1,6 +1,6 @@
 const TextService = game:GetService("TextService")
 
-return function(context, text: string): string
+return function(context: any, text: string): string
 	if text:match("^%s*$") then
 		return "Announce text cannot be empty."
 	end

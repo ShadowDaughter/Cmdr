@@ -1,6 +1,6 @@
 const TeleportService = game:GetService("TeleportService")
 
-return function(context, players: { Player }, placeId: number, jobId: string): string
+return function(context: any, players: { Player }, placeId: number, jobId: string): string
 	if placeId <= 0 then
 		return "Invalid place ID"
 	elseif jobId == "-" then

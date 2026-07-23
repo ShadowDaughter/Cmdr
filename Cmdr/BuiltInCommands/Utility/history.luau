@@ -16,7 +16,7 @@ return {
 		},
 	},
 
-	ClientRun = function(context, line: number): string
+	ClientRun = function(context: any, line: number): string
 		local history = context.Dispatcher:GetHistory()
 
 		if line <= 0 then

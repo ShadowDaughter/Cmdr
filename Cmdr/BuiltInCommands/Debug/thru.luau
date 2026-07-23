@@ -12,7 +12,7 @@ return {
 		},
 	},
 
-	ClientRun = function(context, extra: number): string
+	ClientRun = function(context: any, extra: number): string
 		-- We implement this here because player position is owned by the client.
 		-- No reason to bother the server for this!
 

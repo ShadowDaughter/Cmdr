@@ -33,7 +33,7 @@ return {
 		},
 	},
 
-	ClientRun = function(context, commandName)
+	ClientRun = function(context: any, commandName: string): string
 		const registry = context.Cmdr.Registry
 		if commandName then
 			const command = registry:GetCommand(commandName)
@@ -67,7 +67,6 @@ return {
 			context:Reply(TIPS)
 
 			const commands = registry:GetCommands()
-
 			table.sort(commands, function(a, b)
 				if a.Group and b.Group then
 					return a.Group < b.Group
@@ -79,7 +78,6 @@ return {
 			local lastGroup
 			for _, command in ipairs(commands) do
 				const group = command.Group or "No Group"
-
 				if lastGroup ~= group then
 					context:Reply(`\n{group}\n{string.rep("-", #group)}`)
 					lastGroup = group

@@ -80,7 +80,7 @@ return {
 		},
 	},
 
-	ClientRun = function(context, condition: string, arg: string, testAgainst: string, command: string): string
+	ClientRun = function(context: any, condition: string, arg: string, testAgainst: string, command: string): string
 		const conditionFunc = CONDITIONS[condition]
 		const success, text = pcall(conditionFunc, testAgainst, arg)
 		if success and text then
