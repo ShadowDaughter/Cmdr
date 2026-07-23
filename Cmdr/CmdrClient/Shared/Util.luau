@@ -617,7 +617,7 @@ function Util.MakeSequenceType(options: {
 
 		Validate = function(components)
 			if options.Length and #components > options.Length then
-				return false, ("Maximum of %d values allowed in sequence"):format(options.Length)
+				return false, `Maximum of {options.Length} values allowed in sequence`
 			end
 
 			for componentIndex = 1, options.Length or #components do

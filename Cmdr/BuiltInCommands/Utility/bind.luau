@@ -83,7 +83,8 @@ return {
 			binds[bind] = function(message: TextChatMessage)
 				const args = { message.Text }
 				const chatCommand = context.Cmdr.Util.RunEmbeddedCommands(context.Dispatcher, context.Cmdr.Util.SubstituteArgs(command, args))
-				context:Reply(("%s $ %s : %s"):format(bind.Name, chatCommand, context.Dispatcher:EvaluateAndRun(chatCommand)), Color3.fromRGB(244, 92, 66))
+				const result = context.Dispatcher:EvaluateAndRun(chatCommand)
+				context:Reply(`{bind.Name} $ {chatCommand} : {result}`, Color3.fromRGB(244, 92, 66))
 			end
 		end
 

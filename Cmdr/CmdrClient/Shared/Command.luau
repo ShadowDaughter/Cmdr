@@ -219,7 +219,7 @@ function Command:Parse(allowIncompleteArguments: boolean?): (boolean, string?)
 		end
 
 		if self.RawArguments[index] == nil and required and not allowIncompleteArguments then
-			return false, (`Required argument #%d %s is missing.`):format(index, definition.Name)
+			return false, `Required argument #{index} {definition.Name} is missing.`
 		end
 
 		if self.RawArguments[index] or allowIncompleteArguments then

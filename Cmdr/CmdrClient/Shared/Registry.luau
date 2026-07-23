@@ -213,7 +213,7 @@ function Registry:RegisterTypePrefix(name: string, union: string)
 		self._typeAliases[name] = name
 	end
 
-	self._typeAliases[name] = ("%s %s"):format(self._typeAliases[name], union)
+	self._typeAliases[name] = `{self._typeAliases[name]} {union}`
 end
 
 --[=[

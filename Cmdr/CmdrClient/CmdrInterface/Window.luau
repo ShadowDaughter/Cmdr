@@ -33,7 +33,7 @@ local function buildAutoCompleteText(command, lastArg, replace: string): string
 			argumentText = ("%q"):format(argumentText)
 		end
 
-		newText = ("%s %s"):format(newText, argumentText)
+		newText = `{newText} {argumentText}`
 		if argument == lastArg then
 			break
 		end
@@ -511,7 +511,7 @@ return function(CmdrClient, AutoComplete)
 	]=]
 	function Window._handleArgumentAutoComplete(command: any, arguments: { string }, text: string, hasTrailingSpace: boolean, atEnd: boolean)
 		const commandValid, commandError = command:Validate()
-		Window:_setIsValidInput(commandValid, ("Validation errors: %s"):format(commandError or ""))
+		Window:_setIsValidInput(commandValid, `Validation errors: {commandError or ""}`)
 
 		const lastArgument = command:GetArgument(#arguments)
 		if not lastArgument then
@@ -595,7 +595,7 @@ return function(CmdrClient, AutoComplete)
 				Window:HideInvalidState()
 			end
 		else
-			Window:_setIsValidInput(false, ("%q is not a valid command name. Use the help command to see all available commands."):format(commandText))
+			Window:_setIsValidInput(false, `{commandText} is not a valid command name. Use the help command to see all available commands.`)
 		end
 
 		local autocompleteItems = { exactMatch }
@@ -627,10 +627,6 @@ return function(CmdrClient, AutoComplete)
 		Fired whenever the command input text changes. Validates inputs and updates the autocomplete view.
 	]=]
 	function Window._onTextChanged(text: string)
-		--[[if typeof(text) ~= "string" or CmdrClient.Util.TrimString(text) == "" then
-			return
-		end--]]
-
 		const command = CmdrClient.Dispatcher:Evaluate(text, Player, true)
 		local arguments = CmdrClient.Util.SplitString(text)
 		const commandText = table.remove(arguments, 1)
