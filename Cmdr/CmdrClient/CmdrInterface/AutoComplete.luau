@@ -125,9 +125,10 @@ return function(CmdrClient)
 			button.Suggest.Text = suggestionText:sub(1, start - 1) .. string.rep(" ", #typedText) .. suggestionText:sub(stop + 1)
 
 			button.LayoutOrder = index
-			button.Parent = self.Gui
+			button.Parent = autoCompleteFrame
 
-			autocompleteWidth = math.max(autocompleteWidth, button.Typed.TextBounds.X + button.Suggest.TextBounds.X + 20)
+			local maxBounds = math.max(button.Typed.TextBounds.X, button.Suggest.TextBounds.X) + 20
+			autocompleteWidth = math.max(autocompleteWidth, maxBounds)
 
 			item.gui = button
 		end

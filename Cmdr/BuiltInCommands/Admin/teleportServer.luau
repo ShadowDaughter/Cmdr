@@ -1,6 +1,6 @@
 return function(_, fromPlayers: { Player }, destination: Player | Vector3): string
 	local cFrame
-	if typeof(destination) == "Player" then
+	if typeof(destination) == "Instance" then
 		if destination.Character and destination.Character:FindFirstChild("HumanoidRootPart") then
 			cFrame = destination.Character:GetPivot()
 		else
@@ -25,5 +25,5 @@ return function(_, fromPlayers: { Player }, destination: Player | Vector3): stri
 		character:PivotTo(cFrame)
 	end
 
-	return ("Teleported %d players."):format(#fromPlayers)
+	return `Teleported {#fromPlayers} players.`
 end

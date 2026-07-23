@@ -226,8 +226,7 @@ function Dispatcher:RunHooks(hookName: string, commandContext, ...): nil | strin
 
 		if not hasDisplayedBeforeRunHookWarning then
 			const environment = IS_SERVER and "<Server>" or "<Client>"
-			-- FIXME: This link will need to be updated when new docs are deployed
-			commandContext:Reply(environment .. " Commands will not run in-game if no BeforeRun hook is configured. Learn more: https://eryn.io/Cmdr/guide/Hooks.html", WARNING_COLOR)
+			commandContext:Reply(environment .. " Commands will not run in-game if no BeforeRun hook is configured. Learn more: https://eryn.io/Cmdr/docs/commands-reference/hooks", WARNING_COLOR)
 			hasDisplayedBeforeRunHookWarning = true
 		end
 	end

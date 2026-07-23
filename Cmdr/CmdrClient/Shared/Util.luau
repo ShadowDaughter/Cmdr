@@ -1,3 +1,5 @@
+-- Here be dragons
+
 const TextService = game:GetService("TextService")
 
 const CMDR_ESCAPE = "___!CMDR_ESCAPE!___"
@@ -19,7 +21,7 @@ const function transformInstanceSet(instances: { any }): ({ string }, { any })
 	for index = 1, #instances do
 		local object = instances[index]
 		if typeof(object) == "Instance" and object:IsA("Player") then
-			names[index] = if object.DisplayName == object.Name then object.Name else `{object.DisplayName} ({object.Name})`
+			names[index] = if object.DisplayName == object.Name then object.Name else `{object.DisplayName} (@{object.Name})`
 		else
 			names[index] = object.Name or tostring(object)
 		end
@@ -193,83 +195,6 @@ function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?)
 	end
 end
 
---[[function Util.MakeFuzzyFinder(setOrContainer: any): (string, boolean?, boolean?) -> any
-	local names: { string }
-	local instances: { any } = {}
-
-	if typeof(setOrContainer) == "Enum" then
-		setOrContainer = setOrContainer:GetEnumItems()
-	end
-
-	if typeof(setOrContainer) == "Instance" then
-		names, instances = transformInstanceSet(setOrContainer:GetChildren())
-	elseif typeof(setOrContainer) == "table" then
-		if typeof(setOrContainer[1]) == "Instance" or typeof(setOrContainer[1]) == "EnumItem" or (typeof(setOrContainer[1]) == "table" and typeof(setOrContainer[1].Name) == "string") then
-			names, instances = transformInstanceSet(setOrContainer)
-		elseif type(setOrContainer[1]) == "string" then
-			names = setOrContainer
-		elseif setOrContainer[1] ~= nil then
-			error("[Cmdr] MakeFuzzyFinder only accepts tables of instances or strings.")
-		else
-			names = {}
-		end
-	else
-		error("[Cmdr] MakeFuzzyFinder only accepts a table, Enum, or Instance.")
-	end
-
-	-- Searches the set (checking exact matches first)
-	return function(text: string, returnFirst: boolean?, matchStart: boolean?)
-		local resultsPriority = {}
-		local results = {}
-
-		for index, name in pairs(names) do
-			local value = instances and instances[index] or name
-
-			-- Continue on checking for non-exact matches...
-			-- Still need to loop through everything, even on returnFirst, because possibility of an exact match.
-			if name:lower() == text:lower() then
-				if returnFirst then
-					return value
-				else
-					results[#results + 1] = value
-					resultsPriority[value] = 0
-				end
-			elseif matchStart then
-				if name:lower():sub(1, #text) == text:lower() then
-					results[#results + 1] = value
-					resultsPriority[value] = 1
-				end
-			else
-				local startingIndex = name:lower():find(text:lower(), 1, true)
-				if startingIndex then
-					results[#results + 1] = value
-					resultsPriority[value] = startingIndex
-				end
-			end
-		end
-
-		table.sort(results, function(a, b)
-			local aPriority = resultsPriority[a]
-			local bPriority = resultsPriority[b]
-			if aPriority ~= bPriority then
-				return aPriority < bPriority
-			else
-				local aStr = if typeof(a) == "string" then a elseif typeof(a) == "Instance" then a.Name elseif typeof(a) == "table" and typeof(a.Name) == "string" then a.Name else ""
-
-				local bStr = if typeof(b) == "string" then b elseif typeof(b) == "Instance" then b.Name elseif typeof(b) == "table" and typeof(b.Name) == "string" then b.Name else ""
-
-				return #aStr < #bStr
-			end
-		end)
-
-		if returnFirst then
-			return results[1]
-		end
-
-		return results
-	end
-end--]]
-
 --[=[
 	@within Util
 
@@ -338,6 +263,18 @@ function Util.EncodeEscapedOperators(text: string): string
 
 	return text
 end
+
+--[[
+	FIXME: Listable types containing spaces are currently handled incorrectly.
+	The issue spans multiple systems, including Window, Dispatcher, and Argument.
+	Fixing this properly would require a major overhaul of how Cmdr tokenizes,
+	parses, and preserves command input strings.
+
+	Good luck, future reader.
+
+	Hours wasted attempting to fix this:
+	3
+]]
 
 --[=[
 	@within Util
