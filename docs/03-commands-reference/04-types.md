@@ -56,7 +56,7 @@ local intType = {
 	end,
 }
 
-return function(registry)
+return function(registry: any)
 	registry:RegisterType("integer", intType)
 end
 ```

@@ -35,7 +35,7 @@ local myCustomType = {
 	end,
 }
 
-return function(registry)
+return function(registry: any)
 	registry:RegisterType("myCustomType", myCustomType)
 end
 ```
@@ -144,7 +144,7 @@ Cmdr provides a few standard factory functions within `Util` to quickly spin up 
 For basic collections of discrete string choices, use `Util.MakeEnumType(name, choices)`. This automatically provides full fuzzy-matching autocomplete suggestions and ensures the parsed output explicitly matches a key within your options array.
 
 ```lua
-return function(registry)
+return function(registry: any)
 	local customEnum = registry.Cmdr.Util.MakeEnumType("rarity", { "Common", "Rare", "Epic", "Legendary" })
 	registry:RegisterType("rarity", customEnum)
 end

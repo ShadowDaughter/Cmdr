@@ -1,21 +1,21 @@
 const Teams = game:GetService("Teams")
 
-return function(registry)
+return function(registry: any)
 	const teamType = {
-		Transform = function(text)
+		Transform = function(text: string): { Team }
 			const findTeam = registry.Cmdr.Util.MakeFuzzyFinder(Teams:GetTeams())
 			return findTeam(text)
 		end,
 
-		Validate = function(teams)
+		Validate = function(teams: { Team }): (boolean, string?)
 			return #teams > 0, "No team with that name could be found."
 		end,
 
-		Autocomplete = function(teams)
+		Autocomplete = function(teams: { Team }): { string }
 			return registry.Cmdr.Util.GetNames(teams)
 		end,
 
-		Parse = function(teams)
+		Parse = function(teams: { Team }): Team?
 			return teams[1]
 		end,
 	}
@@ -25,8 +25,7 @@ return function(registry)
 		Transform = teamType.Transform,
 		Validate = teamType.Validate,
 		Autocomplete = teamType.Autocomplete,
-
-		Parse = function(teams)
+		Parse = function(teams: { Team }): { Player }
 			return teams[1]:GetPlayers()
 		end,
 	}
@@ -35,8 +34,7 @@ return function(registry)
 		Transform = teamType.Transform,
 		Validate = teamType.Validate,
 		Autocomplete = teamType.Autocomplete,
-
-		Parse = function(teams)
+		Parse = function(teams: { Team }): BrickColor?
 			return teams[1].TeamColor
 		end,
 	}

@@ -209,30 +209,30 @@ const BRICK_COLOR_NAMES = {
 	"Hot pink",
 }
 
-return function(registry)
+return function(registry: any)
 	const brickColorFinder = registry.Cmdr.Util.MakeFuzzyFinder(BRICK_COLOR_NAMES)
 	const brickColorType = {
 		Prefixes = "% teamColor",
 
-		Transform = function(text)
+		Transform = function(text: string): { [number]: BrickColor }
 			local brickColors = {}
 
-			for index, name in pairs(brickColorFinder(text)) do
-				brickColors[index] = BrickColor.new(name)
+			for index: number, name: string in pairs(brickColorFinder(text)) do
+				brickColors[index] = BrickColor.new(name :: any) --< BrickColor.new gets overloaded
 			end
 
 			return brickColors
 		end,
 
-		Validate = function(brickColors)
+		Validate = function(brickColors: { [number]: BrickColor }): (boolean, string?)
 			return #brickColors > 0, "No valid brick colors with that name could be found."
 		end,
 
-		Autocomplete = function(brickColors)
+		Autocomplete = function(brickColors: { [number]: BrickColor }): { string }
 			return registry.Cmdr.Util.GetNames(brickColors)
 		end,
 
-		Parse = function(brickColors)
+		Parse = function(brickColors: { [number]: BrickColor }): BrickColor
 			return brickColors[1]
 		end,
 	}
@@ -242,7 +242,7 @@ return function(registry)
 		Validate = brickColorType.Validate,
 		Autocomplete = brickColorType.Autocomplete,
 
-		Parse = function(brickColors)
+		Parse = function(brickColors: { [number]: BrickColor }): Color3
 			return brickColors[1].Color
 		end,
 	}

@@ -1,20 +1,19 @@
-return function(registry)
+return function(registry: any)
 	const commandType = {
-		Transform = function(text)
-			local findCommand = registry.Cmdr.Util.MakeFuzzyFinder(registry:GetCommandNames())
-
+		Transform = function(text: string): { [number]: string }
+			const findCommand = registry.Cmdr.Util.MakeFuzzyFinder(registry:GetCommandNames())
 			return findCommand(text)
 		end,
 
-		Validate = function(commands)
+		Validate = function(commands: { [number]: string }): (boolean, string?)
 			return #commands > 0, "No command with that name could be found."
 		end,
 
-		Autocomplete = function(commands)
+		Autocomplete = function(commands: { [number]: string }): { [number]: string }
 			return commands
 		end,
 
-		Parse = function(commands)
+		Parse = function(commands: { [number]: string }): string
 			return commands[1]
 		end,
 	}

@@ -41,7 +41,7 @@ local PUBLIC_GROUPS = {
 local MIN_RANK_REQUIRED = 250 -- e.g., Admin rank in your Roblox group
 local GROUP_ID = 0000000 -- Replace with your Roblox GroupId
 
-return function(registry)
+return function(registry: any)
 	registry:RegisterHook("BeforeRun", function(context)
 		local player = context.Executor
 
@@ -173,7 +173,7 @@ local GroupService = game:GetService("GroupService")
 local MIN_RANK_REQUIRED = 250
 local GROUP_ID = 123456
 
-return function(registry)
+return function(registry: any)
 	registry:RegisterHook("BeforeRun", function(context)
 		-- Explicitly block non-admins from passing payload data through this command
 		if context.Name == "moderatorclick" and context.Group == "Admin" then

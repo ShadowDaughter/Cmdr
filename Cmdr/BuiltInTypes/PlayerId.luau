@@ -1,16 +1,20 @@
 const Players = game:GetService("Players")
 
-local nameCache = {}
-const function getUserId(username): number?
+local nameCache: { [string]: number } = {}
+
+const function getUserId(username: string): number?
 	username = username:match("%(@([^%)]+)%)") or username
 
 	if nameCache[username] then
 		return nameCache[username]
 	elseif Players:FindFirstChild(username) then
-		nameCache[username] = Players[username].UserId
-		return Players[username].UserId
+		const player = Players[username] :: Player
+
+		nameCache[username] = player.UserId
+		return player.UserId
 	else
 		const success, userid = pcall(Players.GetUserIdFromNameAsync, Players, username)
+
 		if not success then
 			return nil
 		end
@@ -20,21 +24,21 @@ const function getUserId(username): number?
 	end
 end
 
-return function(registry)
+return function(registry: any)
 	const playerIdType = {
 		DisplayName = "Full Player Name",
 		Prefixes = "# positiveInteger",
 
-		Transform = function(text): number
+		Transform = function(text: string): (string, { Player })
 			const findPlayer = registry.Cmdr.Util.MakeFuzzyFinder(Players:GetPlayers())
 			return text, findPlayer(text)
 		end,
 
-		ValidateOnce = function(text): boolean
+		ValidateOnce = function(text: string): (boolean, string?)
 			return getUserId(text) ~= nil, "No player with that name could be found."
 		end,
 
-		Autocomplete = function(_, players: { Player }): string
+		Autocomplete = function(_, players: { Player }): { string }
 			return registry.Cmdr.Util.GetNames(players)
 		end,
 

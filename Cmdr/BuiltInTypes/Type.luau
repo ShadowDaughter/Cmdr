@@ -1,20 +1,20 @@
-return function(registry)
+return function(registry: any)
 	const typeType = {
-		Transform = function(text)
-			const findCommand = registry.Cmdr.Util.MakeFuzzyFinder(registry:GetTypeNames())
-			return findCommand(text)
+		Transform = function(text: string): { string }
+			const findType = registry.Cmdr.Util.MakeFuzzyFinder(registry:GetTypeNames())
+			return findType(text)
 		end,
 
-		Validate = function(commands)
-			return #commands > 0, "No type with that name could be found."
+		Validate = function(types: { string }): (boolean, string?)
+			return #types > 0, "No type with that name could be found."
 		end,
 
-		Autocomplete = function(commands)
-			return commands
+		Autocomplete = function(types: { string }): { string }
+			return types
 		end,
 
-		Parse = function(commands)
-			return commands[1]
+		Parse = function(types: { string }): string?
+			return types[1]
 		end,
 	}
 

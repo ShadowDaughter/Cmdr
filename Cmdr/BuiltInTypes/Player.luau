@@ -1,13 +1,13 @@
 const Players = game:GetService("Players")
 
-return function(registry)
+return function(registry: any)
 	const playerType = {
-		Transform = function(text: string): Player
-			local findPlayer = registry.Cmdr.Util.MakeFuzzyFinder(Players:GetPlayers())
+		Transform = function(text: string): { Player }
+			const findPlayer = registry.Cmdr.Util.MakeFuzzyFinder(Players:GetPlayers())
 			return findPlayer(text)
 		end,
 
-		Validate = function(players: { Player }): boolean
+		Validate = function(players: { Player }): (boolean, string?)
 			return #players > 0, "No player with that name could be found."
 		end,
 
