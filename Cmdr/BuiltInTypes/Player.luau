@@ -20,7 +20,7 @@ return function(registry: any)
 		end,
 
 		Default = function(player: Player): string
-			return if player.DisplayName == player.Name then player.Name else `{player.DisplayName} (@{player.Name})`
+			return player.Name
 		end,
 
 		ArgumentOperatorAliases = {

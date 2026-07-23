@@ -20,11 +20,7 @@ const function transformInstanceSet(instances: { any }): ({ string }, { any })
 
 	for index = 1, #instances do
 		local object = instances[index]
-		if typeof(object) == "Instance" and object:IsA("Player") then
-			names[index] = if object.DisplayName == object.Name then object.Name else `{object.DisplayName} (@{object.Name})`
-		else
-			names[index] = object.Name or tostring(object)
-		end
+		names[index] = object.Name or tostring(object)
 	end
 
 	return names, instances
