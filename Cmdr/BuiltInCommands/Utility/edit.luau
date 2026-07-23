@@ -1,6 +1,6 @@
-local Players = game:GetService("Players")
+const Players = game:GetService("Players")
 
-local TEXT_BOX_PROPERTIES = {
+const TEXT_BOX_PROPERTIES = {
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	BackgroundColor3 = Color3.fromRGB(17, 17, 17),
 	BackgroundTransparency = 0.05,
@@ -42,19 +42,17 @@ return {
 		},
 	},
 
-	ClientRun = function(context, text, delimeter)
+	ClientRun = function(context, text: string, delimeter: string): string
 		lock = lock or context.Cmdr.Util.Mutex()
 
-		local unlock = lock()
-
+		const unlock = lock()
 		context:Reply("Right-click on the text area to exit.", Color3.fromRGB(158, 158, 158))
 
-		local screenGui = Instance.new("ScreenGui")
+		const screenGui = Instance.new("ScreenGui")
 		screenGui.Name = "CmdrEditBox"
 		screenGui.ResetOnSpawn = false
 
-		local textBox = Instance.new("TextBox")
-
+		const textBox = Instance.new("TextBox")
 		for key, value in pairs(TEXT_BOX_PROPERTIES) do
 			textBox[key] = value
 		end
@@ -64,8 +62,7 @@ return {
 
 		screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
-		local thread = coroutine.running()
-
+		const thread = coroutine.running()
 		textBox.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton2 then
 				coroutine.resume(thread, textBox.Text:gsub("\n", delimeter))
