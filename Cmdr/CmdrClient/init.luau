@@ -237,7 +237,7 @@ end
 	@within CmdrClient
 	Sets the key codes that will used to toggle Cmdr.
 ]=]
-function CmdrClient:SetActivationUnlocksmouse(enabled: boolean)
+function CmdrClient:SetActivationUnlocksMouse(enabled: boolean)
 	self._activationUnlocksMouse = enabled
 end
 
