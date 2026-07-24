@@ -304,7 +304,7 @@ end
 
 --[=[
 	@within CmdrClient
-	Sets the [network event handler](/docs/networkeventhandlers) for a certain event type.
+	Sets the [network event handler](/docs/commands-reference/networkeventhandlers) for a certain event type.
 ]=]
 function CmdrClient:HandleEvent(name: string, callback: (...any) -> ())
 	self._events[name] = callback
