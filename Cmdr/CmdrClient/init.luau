@@ -235,7 +235,7 @@ end
 
 --[=[
 	@within CmdrClient
-	Sets the key codes that will used to toggle Cmdr.
+	Sets if activation will free the mouse.
 ]=]
 function CmdrClient:SetActivationUnlocksMouse(enabled: boolean)
 	self._activationUnlocksMouse = enabled
