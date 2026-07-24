@@ -157,9 +157,9 @@ end
 	@readonly
 	@private
 
-	@prop _mashToOpen boolean
+	@prop _mashToEnable boolean
 
-	Whether or not mashing to open is enabled. Use [`CmdrClient:SetMashToOpen`](#SetMashToOpen) to change.
+	Whether or not mashing to enabled is enabled. Use [`CmdrClient:SetMashToEnable`](#SetMashToEnable) to change.
 ]=]
 
 --[=[
@@ -209,7 +209,7 @@ local CmdrClient = {
 	_enabled = true,
 	_activationKeys = { Enum.KeyCode.F2 },
 	_activationUnlocksMouse = false,
-	_mashToOpen = false,
+	_mashToEnable = false,
 	_hideOnLostFocus = true,
 
 	_placeName = "Cmdr",
@@ -276,25 +276,13 @@ end
 
 --[=[
 	@within CmdrClient
-	Enables the "Mash to open" feature.
-	This feature, when enabled, requires the [activation key](#SetActivationKeys) to be pressed 5 times within a second to open Cmdr.
+	Enables the "Mash to enable" feature.
+	This feature, when enabled, requires the [activation key](#SetActivationKeys) to be pressed 5 times within a second to enable Cmdr.
 	This may be helpful to guard against mispresses from opening the window, for example.
-	Once opened, mashing will be disabled for 10 seconds since it was last closed for convenience.
-]=]
-function CmdrClient:SetMashToOpen(enabled: boolean)
-	self._mashToOpen = enabled
-end
-
---[=[
-	@within CmdrClient
-	@deprecated v1.13.0 -- This method was renamed to SetMashToOpen in v1.13.0. The old name exists for backwards compatibility and should not be used for new work.
 ]=]
 function CmdrClient:SetMashToEnable(enabled: boolean)
-	Util:_emitDeprecationWarning("SetMashToEnable")
-	self:SetMashToOpen(enabled)
+	self._mashToEnable = enabled
 end
-
-Util:_registerDeprecationWarning("SetMashToEnable", "This method was renamed to SetMashToOpen in v1.13.0. The old name exists for backwards compatibility and should not be used for new work.")
 
 --[=[
 	@within CmdrClient

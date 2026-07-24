@@ -58,18 +58,18 @@ return function(CmdrClient, AutoComplete)
 		_previousChatInputBarEnabled = nil :: boolean?,
 		_previousChannelTabsEnabled = nil :: boolean?,
 		_previousMouseBehavior = nil :: boolean?,
-		_lastClosedTime = nil :: number?,
+
+		_hasLostFocus = false,
 
 		_valid = true,
 		_errorText = nil :: string?,
 
 		_historyState = nil :: { Position: number, InitialText: string }?,
 
-		_hasLostFocus = false,
-
+		--_lastClosedTime = nil :: number?,
 		_pressCount = 0,
 		_lastPressTime = 0,
-		_openedByMash = false,
+		--_openedByMash = false,
 	}
 
 	--[=[
@@ -215,13 +215,13 @@ return function(CmdrClient, AutoComplete)
 			self:_setEntryText("")
 			self._entry.TextBox:CaptureFocus()
 		else
-			self._lastClosedTime = os.clock()
+			--self._lastClosedTime = os.clock()
 
 			self:_setChatEnabled(true)
 			self:_setMouseUnlocked(false)
 
-			self._entry.TextBox:ReleaseFocus()
 			AutoComplete:Hide()
+			self._entry.TextBox:ReleaseFocus()
 		end
 
 		CmdrClient.Toggled:Fire(visible)
@@ -377,8 +377,17 @@ return function(CmdrClient, AutoComplete)
 		end
 
 		local currentTime = os.clock()
-		if CmdrClient._mashToOpen then
-			if self:IsVisible() then
+		if CmdrClient._mashToEnable then
+			-- Increment mash counter if pressed within 1 second window
+			self._pressCount = if currentTime - self._lastPressTime < 1 then self._pressCount + 1 else 1
+			self._lastPressTime = currentTime
+
+			if self._pressCount >= 5 then
+				self._pressCount = 0
+				CmdrClient._mashToEnable = false
+			end
+
+			--[[if self:IsVisible() then
 				-- Prevent leftover mash presses from instantly closing Cmdr
 				if self._openedByMash and currentTime - self._lastPressTime <= 0.5 then
 					return
@@ -406,10 +415,10 @@ return function(CmdrClient, AutoComplete)
 				self:SetVisible(true)
 				self._pressCount = 0
 				self._openedByMash = true
-			end
+			end--]]
 		else
 			self:SetVisible(not self:IsVisible())
-			self._openedByMash = false
+			--self._openedByMash = false
 		end
 	end
 
